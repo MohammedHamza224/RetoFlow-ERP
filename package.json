@@ -1,0 +1,47 @@
+{
+  "name": "restoflow",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "tsc --noEmit",
+    "preview": "vite preview",
+    "verify:phase1": "npx tsx scripts/verify-phase1-foundation.ts",
+    "verify:db": "npx tsx scripts/verify-db.ts",
+    "verify:auth": "npx tsx scripts/verify-auth.ts",
+    "verify:phase4": "npx tsx scripts/verify-phase4.ts",
+    "verify:phase5": "npx tsx scripts/verify-phase5.ts",
+    "verify:phase6": "npx tsx scripts/verify-phase6.ts",
+    "verify:phase7": "npx tsx scripts/verify-phase7.ts",
+    "verify:phase8": "npx tsx scripts/verify-phase8.ts",
+    "verify:phase9": "npx tsx scripts/verify-phase9.ts",
+    "verify:analytics": "npx tsx scripts/verify-phase9-analytics.ts",
+    "verify:phase10": "npx tsx scripts/verify-phase10.ts",
+    "verify:customers": "npx tsx scripts/verify-customer-persistence.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "clsx": "^2.1.1",
+    "i18next": "^23.12.0",
+    "lucide-react": "^0.428.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^14.0.0",
+    "recharts": "^2.12.7",
+    "tailwind-merge": "^2.5.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.2.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.10",
+    "tsx": "^4.17.0",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1"
+  }
+}
