@@ -24,6 +24,18 @@ export function Header({ activeTab }: HeaderProps) {
     setAppLanguage(nextLang);
   };
 
+  const translateRole = (role?: string) => {
+    if (!role) return 'STAFF';
+    if (currentLang !== 'ar') return role;
+    switch (role) {
+      case 'ADMIN': return 'مسؤول النظام';
+      case 'MANAGER': return 'المدير';
+      case 'CASHIER': return 'الكاشير';
+      case 'STAFF': return 'الموظف';
+      default: return role;
+    }
+  };
+
   const getPageTitle = (tab: string) => {
     const titleMap: Record<string, string> = {
       dashboard: t('nav.dashboard'),
@@ -77,7 +89,7 @@ export function Header({ activeTab }: HeaderProps) {
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
-              {r}
+              {translateRole(r)}
             </button>
           ))}
         </div>
@@ -118,7 +130,7 @@ export function Header({ activeTab }: HeaderProps) {
               </span>
               <div className="flex items-center gap-1 mt-0.5">
                 <Badge variant="warning" className="text-[10px] px-1.5 py-0">
-                  {user?.role_name || 'STAFF'}
+                  {translateRole(user?.role_name)}
                 </Badge>
               </div>
             </div>

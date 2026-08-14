@@ -115,7 +115,7 @@ export function LoginPage() {
         <div className="my-auto py-8 space-y-7">
           <div className="space-y-2">
             <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              {isRtl ? 'تسجيل الدخول' : 'Welcome Back'}
+              {isRtl ? 'مرحبا بكم 👋' : 'Welcome Back 👋'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 font-light">
               {isRtl ? 'أدخل بيانات حسابك للوصول إلى نظام المطعم' : 'Enter your staff credentials to access the restaurant workspace'}

@@ -78,24 +78,36 @@ export function CustomerManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[CustomerCreate] Submit triggered');
+    console.log('[CustomerCreate] Form data:', formData);
+    
     setFormError('');
 
     if (!formData.name.trim()) {
+      console.log('[CustomerCreate] Validation result: Failed (Name required)');
       setFormError('Customer name is required.');
       return;
     }
+    
+    console.log('[CustomerCreate] Validation result: Passed');
 
     setIsSubmitting(true);
     try {
       if (editingCustomer) {
+        console.log('[CustomerUpdate] Updating customer...', editingCustomer.id);
         const updated = await DatabaseService.updateCustomer(user?.id, editingCustomer.id, formData);
         setCustomers(prev => prev.map(c => c.id === editingCustomer.id ? updated : c));
       } else {
+        console.log('[CustomerCreate] Creating customer...');
+        console.log('[CustomerCreate] Payload:', formData);
         const created = await DatabaseService.createCustomer(user?.id, formData);
+        console.log('[CustomerCreate] Customer created successfully:', created);
+        console.log('[CustomerCreate] Updating customer state: adding to array');
         setCustomers(prev => [...prev, created]);
       }
       setIsModalOpen(false);
     } catch (err: any) {
+      console.error('[CustomerCreate] Exception caught:', err.message);
       setFormError(err.message || 'Operation failed.');
     } finally {
       setIsSubmitting(false);
@@ -103,15 +115,40 @@ export function CustomerManagement() {
   };
 
   const handleDelete = async (customer: Customer) => {
+    console.log('[CustomerDelete] START');
+    console.log('[CustomerDelete] customer id:', customer.id);
+    console.log('[CustomerDelete] customer name:', customer.name);
+
     if (!window.confirm(`Are you sure you want to permanently delete customer "${customer.name}"? This action cannot be undone.`)) {
+      console.log('[CustomerDelete] User cancelled confirmation.');
       return;
     }
     
     try {
+      console.log('[CustomerDelete] calling db.service.deleteCustomer()');
       await DatabaseService.deleteCustomer(user?.id, customer.id);
+      
+      console.log('[CustomerDelete] DELETE successful');
+      console.log('[CustomerDelete] updating React state');
       setCustomers(prev => prev.filter(c => c.id !== customer.id));
+      console.log('[CustomerDelete] END');
     } catch (err: any) {
-      alert(err.message || 'Operation failed.');
+      console.log('[CustomerDelete] Caught error in UI:', err.message);
+      if (err.message?.includes('[HISTORICAL_DATA]')) {
+        const confirmDeactivate = window.confirm(
+          `This customer has historical transactions and cannot be permanently deleted. Would you like to deactivate them instead?`
+        );
+        if (confirmDeactivate) {
+          try {
+            await DatabaseService.deactivateCustomer(user?.id, customer.id);
+            setCustomers(prev => prev.map(c => c.id === customer.id ? { ...c, is_active: false } : c));
+          } catch (deactivateErr: any) {
+            alert(deactivateErr.message || 'Deactivation failed.');
+          }
+        }
+      } else {
+        alert(err.message || 'Operation failed.');
+      }
     }
   };
 

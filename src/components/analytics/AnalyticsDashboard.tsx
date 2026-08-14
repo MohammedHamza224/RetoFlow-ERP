@@ -176,6 +176,17 @@ export function AnalyticsDashboard() {
           <p className="text-xs text-muted-foreground mt-0.5">
             {isRtl ? 'مؤشرات الأداء الرئيسية المركزية، الأرباح الهامشية التاريخية ومراقبة سلامة المخزون' : 'Centralized performance KPIs, historical gross margins, and inventory health metrics'}
           </p>
+          <div className="flex items-center gap-1.5 mt-2 text-xs font-semibold text-resto-terracotta-600 dark:text-resto-terracotta-400 bg-resto-terracotta-50/50 dark:bg-resto-terracotta-900/20 w-fit px-2.5 py-1 rounded-md border border-resto-terracotta-100 dark:border-resto-terracotta-800/30">
+            <Calendar className="w-3.5 h-3.5" />
+            <span>
+              {new Date().toLocaleDateString(isRtl ? 'ar-SA' : 'en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </span>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 bg-slate-100 dark:bg-slate-800/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">

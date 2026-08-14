@@ -4,6 +4,7 @@ import { Customer, CustomerType } from '@/types/database.types';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/utils';
 
 export interface CustomerCardProps {
   customer: Customer;
@@ -31,10 +32,20 @@ export const CustomerCard = React.memo(function CustomerCard({
   const isWalkInGuest = customer.id === 'c0000000-0000-0000-0000-000000000001';
 
   return (
-    <Card className="relative overflow-hidden bg-card hover:shadow-card transition-all border flex flex-col justify-between">
+    <Card className={cn(
+      "relative overflow-hidden bg-card transition-all border flex flex-col justify-between",
+      customer.is_active === false ? "opacity-75 grayscale-[0.2]" : "hover:shadow-card"
+    )}>
       <CardHeader className="pb-3 flex flex-row items-start justify-between gap-3">
         <div className="space-y-1 min-w-0 flex-1">
-          <CardTitle className="text-base font-bold truncate">{customer.name}</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-base font-bold truncate">{customer.name}</CardTitle>
+            {customer.is_active === false && (
+              <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                Inactive
+              </span>
+            )}
+          </div>
           <div className="pt-0.5">{getCustomerBadge(customer.customer_type)}</div>
         </div>
       </CardHeader>
@@ -52,7 +63,7 @@ export const CustomerCard = React.memo(function CustomerCard({
 
       {canEditCustomers && !isWalkInGuest && (
         <CardFooter className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 bg-slate-50/50 dark:bg-slate-900/20">
-          {onDelete && (
+          {onDelete && customer.is_active !== false && (
             <Button
               variant="outline"
               size="sm"

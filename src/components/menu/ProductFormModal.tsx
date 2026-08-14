@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { AlertCircle, Upload, X } from 'lucide-react';
 import { Product, Category } from '@/types/database.types';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 export interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: any) => Promise<void>;
+  onSubmit: (formData: any, imageFile: File | null) => Promise<void>;
   categories: Category[];
   editingProduct?: Product | null;
 }
@@ -33,6 +33,10 @@ export function ProductFormModal({
     is_active: true,
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -50,6 +54,7 @@ export function ProductFormModal({
         image_url: editingProduct.image_url || '',
         is_active: editingProduct.is_active,
       });
+      setImagePreview(editingProduct.image_url || null);
     } else {
       setFormData({
         name: '',
@@ -63,9 +68,48 @@ export function ProductFormModal({
         image_url: '',
         is_active: true,
       });
+      setImagePreview(null);
     }
+    setImageFile(null);
     setFormError('');
   }, [editingProduct, isOpen, categories]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError('Image size must be less than 5MB.');
+      return;
+    }
+
+    // Validate type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setFormError('Only JPG, PNG, and WEBP images are allowed.');
+      return;
+    }
+
+    setFormError('');
+    setImageFile(file);
+
+    // Create local preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData(prev => ({ ...prev, image_url: '' }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +146,7 @@ export function ProductFormModal({
 
     setIsSubmitting(true);
     try {
-      await onSubmit(formData);
+      await onSubmit(formData, imageFile);
       onClose();
     } catch (err: any) {
       setFormError(err.message || 'Failed to save product.');
@@ -133,6 +177,45 @@ export function ProductFormModal({
             1. Basic Information
           </h4>
 
+          {/* Image Upload Section */}
+          <div className="space-y-1 mb-4">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Product Image (Optional)</label>
+            <div className="flex items-start gap-4 mt-2">
+              <div className="relative w-24 h-24 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50 overflow-hidden shrink-0">
+                {imagePreview ? (
+                  <>
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full hover:bg-red-500 transition-colors"
+                      title="Remove Image"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center text-slate-400">
+                    <Upload className="w-6 h-6 mb-1" />
+                    <span className="text-[10px]">No Image</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <input
+                  type="file"
+                  accept="image/jpeg, image/png, image/webp"
+                  onChange={handleImageChange}
+                  ref={fileInputRef}
+                  className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-resto-terracotta-50 file:text-resto-terracotta-700 hover:file:bg-resto-terracotta-100 dark:file:bg-resto-terracotta-900/30 dark:file:text-resto-terracotta-300 cursor-pointer"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Supported formats: JPG, PNG, WEBP. Max size: 5MB.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Product Name *</label>
@@ -155,32 +238,21 @@ export function ProductFormModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Category *</label>
-              <select
-                value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
-                required
-              >
-                <option value="" disabled>Select Category</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.id} disabled={!c.is_active}>
-                    {c.name} {!c.is_active ? '(Inactive)' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Image URL</label>
-              <Input
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                placeholder="https://..."
-              />
-            </div>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Category *</label>
+            <select
+              value={formData.category_id}
+              onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
+              required
+            >
+              <option value="" disabled>Select Category</option>
+              {categories.map(c => (
+                <option key={c.id} value={c.id} disabled={!c.is_active}>
+                  {c.name} {!c.is_active ? '(Inactive)' : ''}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-1">

@@ -75,22 +75,48 @@ export function ProductManagement() {
     setIsModalOpen(true);
   }, []);
 
+  const handleFormSubmit = async (formData: any, imageFile: File | null) => {
+    try {
+      let finalImageUrl = formData.image_url;
+
+      // 1. If an image file was selected, upload it
+      if (imageFile) {
+        finalImageUrl = await DatabaseService.uploadProductImage(imageFile);
+      } 
+      // 2. If the user cleared the image (and didn't select a new one), we should delete the old one
+      else if (editingProduct && editingProduct.image_url && !formData.image_url) {
+        // The user explicitly removed the image
+        // Wait to delete it until AFTER the database update succeeds
+      }
+
+      const payload = { ...formData, image_url: finalImageUrl };
+
+      if (editingProduct) {
+        const updated = await DatabaseService.updateProduct(user?.id, editingProduct.id, payload);
+        
+        // If image was removed or replaced, delete the old image from storage
+        if (editingProduct.image_url && editingProduct.image_url !== finalImageUrl) {
+          await DatabaseService.deleteProductImage(editingProduct.image_url);
+        }
+
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? updated : p));
+      } else {
+        const created = await DatabaseService.createProduct(user?.id, payload);
+        setProducts(prev => [...prev, created]);
+      }
+
+      // Close the modal upon success
+      setIsModalOpen(false);
+    } catch (err: any) {
+      console.error('Failed to save product:', err);
+      throw err; // Re-throw to be handled by the form modal
+    }
+  };
+
   const openEditModal = useCallback((prod: Product) => {
     setEditingProduct(prod);
     setIsModalOpen(true);
   }, []);
-
-  const handleFormSubmit = async (formData: any) => {
-    if (editingProduct) {
-      const updated = await DatabaseService.updateProduct(user?.id, editingProduct.id, formData);
-      setProducts(prev => prev.map(p => p.id === editingProduct.id ? updated : p));
-    } else {
-      const created = await DatabaseService.createProduct(user?.id, formData);
-      setProducts(prev => [...prev, created]);
-    }
-    // Refresh categories/products asynchronously
-    loadData(false).catch(err => console.warn('Background menu refresh error:', err));
-  };
 
   // Optimistic Local Status Toggle (0ms UI response)
   const handleToggleStatus = useCallback(async (prod: Product) => {

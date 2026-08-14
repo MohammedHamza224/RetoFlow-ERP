@@ -140,7 +140,7 @@ export const CheckoutPanel = React.memo(function CheckoutPanel({
           onChange={(e) => setSelectedCustomerId(e.target.value)}
           className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
         >
-          {customers.map(c => (
+          {customers.filter(c => c.is_active !== false).map(c => (
             <option key={c.id} value={c.id}>
               {c.name} ({c.customer_type}) {c.phone ? `- ${c.phone}` : ''}
             </option>

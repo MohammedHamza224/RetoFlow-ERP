@@ -81,6 +81,7 @@ export interface Customer {
   email?: string;
   address?: string;
   customer_type: CustomerType;
+  is_active?: boolean;
   created_at: string;
   updated_at: string;
 }

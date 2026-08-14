@@ -434,7 +434,7 @@ export class DatabaseService {
 
     const { data, error } = await supabase
       .from('customers')
-      .select('id, name, phone, email, customer_type, created_at, updated_at')
+      .select()
       .order('name');
 
     console.log('[Supabase Customers] data:', data);
@@ -461,6 +461,7 @@ export class DatabaseService {
     const trimmedName = data.name.trim();
     if (!trimmedName) throw new Error('Customer name is required.');
 
+    console.log('[CustomerCreate] Supabase insert started');
     const { data: dbData, error } = await supabase
       .from('customers')
       .insert({
@@ -472,12 +473,17 @@ export class DatabaseService {
       .select()
       .single();
 
+    console.log('[CustomerCreate] Supabase response:', { error, dbData });
+    console.log('[CustomerCreate] Returned data:', dbData);
+    console.log('[CustomerCreate] Returned error:', error);
+
     if (error) {
-      console.error('[DatabaseService] Supabase createCustomer error:', error.message);
+      console.error('[CustomerCreate] Supabase createCustomer error:', error.message, error.code, error.details, error.hint);
       throw new Error(`Failed to create customer: ${error.message}`);
     }
 
     if (dbData) {
+      console.log('[CustomerCreate] Refreshing customer cache');
       serviceCache.invalidateCustomers();
       return dbData as Customer;
     }
@@ -526,20 +532,47 @@ export class DatabaseService {
   }
 
   static async deleteCustomer(userId: string | undefined, id: string): Promise<void> {
-    this.validateRolePermission(userId, ['ADMIN', 'MANAGER']); // usually only higher roles delete
+    console.log('[CustomerDelete] db.service.ts deleteCustomer called with id:', id);
+    this.validateRolePermission(userId, ['ADMIN', 'MANAGER', 'CASHIER']);
+
+    console.log('[CustomerDelete] Supabase DELETE started');
+    const { data, error, status } = await supabase
+      .from('customers')
+      .delete()
+      .eq('id', id)
+      .select();
+
+    console.log('[CustomerDelete] Supabase response status:', status);
+    console.log('[CustomerDelete] Supabase data:', data);
+    console.log('[CustomerDelete] Supabase error:', error);
+
+    if (error) {
+      console.error('[CustomerDelete] Supabase deleteCustomer error:', error.message);
+      if (error.code === '23503' || error.message.includes('foreign key constraint')) {
+        throw new Error('[HISTORICAL_DATA] Cannot delete this customer because they have historical orders or transactions attached to them.');
+      }
+      throw new Error(`Failed to delete customer: ${error.message}`);
+    }
+
+    if (!data || data.length === 0) {
+      console.log('[CustomerDelete] WARNING: No rows were deleted. Either the ID does not exist or RLS blocked the deletion.');
+    }
+
+    console.log('[CustomerDelete] updating customer cache');
+    serviceCache.invalidateCustomers();
+  }
+
+  static async deactivateCustomer(userId: string | undefined, id: string): Promise<void> {
+    this.validateRolePermission(userId, ['ADMIN', 'MANAGER']);
 
     const { error } = await supabase
       .from('customers')
-      .delete()
+      .update({ is_active: false })
       .eq('id', id);
 
     if (error) {
-      console.error('[DatabaseService] Supabase deleteCustomer error:', error.message);
-      // Handle foreign key constraint violation (PostgreSQL code 23503)
-      if (error.code === '23503' || error.message.includes('foreign key constraint')) {
-        throw new Error('Cannot delete this customer because they have historical orders or transactions attached to them.');
-      }
-      throw new Error(`Failed to delete customer: ${error.message}`);
+      console.error('[DatabaseService] Supabase deactivateCustomer error:', error.message);
+      throw new Error(`Failed to deactivate customer: ${error.message}`);
     }
 
     serviceCache.invalidateCustomers();
@@ -817,6 +850,47 @@ export class DatabaseService {
     return [];
   }
 
+  static async uploadProductImage(file: File): Promise<string> {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+      .from('product-images')
+      .upload(fileName, file, { upsert: false });
+
+    if (error) {
+      console.error('[DatabaseService] uploadProductImage error:', error.message);
+      throw new Error(`Failed to upload image: ${error.message}`);
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(fileName);
+
+    return publicUrlData.publicUrl;
+  }
+
+  static async deleteProductImage(imageUrl: string): Promise<void> {
+    if (!imageUrl || !imageUrl.includes('product-images')) return;
+
+    try {
+      // Extract filename from URL
+      const urlParts = imageUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      if (!fileName) return;
+
+      const { error } = await supabase.storage
+        .from('product-images')
+        .remove([fileName]);
+
+      if (error) {
+        console.error('[DatabaseService] deleteProductImage error:', error.message);
+      }
+    } catch (err) {
+      console.error('[DatabaseService] Failed to delete old image:', err);
+    }
+  }
+
   static async createProduct(
     userId: string | undefined,
     data: {
@@ -1040,14 +1114,27 @@ export class DatabaseService {
     throw new Error('Order checkout failed: No valid response from server.');
   }
 
-  static async getOrders(): Promise<Order[]> {
+  static async getOrders(forceRefresh: boolean = false, statusFilter?: string): Promise<Order[]> {
+    if (forceRefresh) {
+      serviceCache.invalidateOrders();
+    }
+    
     const cached = serviceCache.getOrders();
-    if (cached) return cached;
+    if (cached) {
+      if (statusFilter === 'ACTIVE') return cached.filter(o => o.status !== 'CANCELLED');
+      return cached;
+    }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('orders')
       .select('id, order_number, customer_id, table_id, user_id, order_type, status, subtotal, discount, tax, total, notes, cancelled_at, cancelled_by, cancellation_reason, stock_deducted, created_at, updated_at, customer:customers(id, name, phone), table:restaurant_tables(id, table_number), user:users!orders_user_id_fkey(id, name), items:order_items(id, order_id, product_id, quantity, unit_price, unit_cost, discount, total, product:products(id, name, sku)), payments:payments(id, order_id, payment_method, amount, status, paid_at)')
       .order('created_at', { ascending: false });
+
+    if (statusFilter === 'ACTIVE') {
+      query = query.neq('status', 'CANCELLED');
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('[DatabaseService] Supabase getOrders error:', error.message);
@@ -1055,7 +1142,10 @@ export class DatabaseService {
     }
 
     if (data) {
-      serviceCache.setOrders(data as unknown as Order[]);
+      // Only cache if we fetched the complete dataset to avoid poisoning the analytics cache
+      if (statusFilter !== 'ACTIVE') {
+        serviceCache.setOrders(data as unknown as Order[]);
+      }
       return data as unknown as Order[];
     }
     return [];

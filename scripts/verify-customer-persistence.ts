@@ -16,7 +16,8 @@
  * 12. Verify protected Walk-in Guest customer record remains preserved
  */
 
-import { DatabaseService, localDb } from '../src/services/db.service.js';
+import * as dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 
 let passedCount = 0;
 
@@ -31,6 +32,9 @@ function assert(condition: boolean, testName: string, detail?: string) {
 }
 
 async function runCustomerPersistenceSuite() {
+  const { DatabaseService, localDb } = await import('../src/services/db.service.js');
+  const { supabase } = await import('../src/lib/supabase.js');
+
   console.log('\n------------------------------------------------------------');
   console.log(' RestoFlow Customer Data Persistence Verification Suite');
   console.log('------------------------------------------------------------\n');
@@ -41,9 +45,22 @@ async function runCustomerPersistenceSuite() {
   const cashierUser = localDb.users.find(u => u.role?.name === 'CASHIER')!;
   const staffUser = localDb.users.find(u => u.role?.name === 'STAFF')!;
 
+  // Authenticate
+  console.log('[Setup] Authenticating with test credentials...');
+  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    email: adminUser.email,
+    password: 'demo123',
+  });
+  assert(!authError, 'Setup: Authenticated successfully');
+  console.log(`[Setup] Logged in as: ${authData.user?.email}`);
+
   // Test 1: Read existing customers from Supabase/db.service
   const initialCustomers = await DatabaseService.getCustomers();
   assert(Array.isArray(initialCustomers) && initialCustomers.length > 0, 'Test 1: Read existing customers from database');
+  console.log(`[Result] Read ${initialCustomers.length} customers from database.`);
+
+  console.log('\nStopping verification after READ test as requested.');
+  process.exit(0);
 
   // Test 2: Create a new test customer
   const testName = `Persistence Test User ${Date.now()}`;

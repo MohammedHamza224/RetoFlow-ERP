@@ -28,34 +28,47 @@ export function OrderManagement() {
   const cachedOrders = DatabaseService.getCachedOrdersSync();
   const [orders, setOrders] = useState<Order[]>(cachedOrders || []);
   const [isLoading, setIsLoading] = useState(!cachedOrders || cachedOrders.length === 0);
-
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   // Filters State
   const [searchTerm, setSearchTerm] = useState('');
   const deferredSearchTerm = useDeferredValue(searchTerm);
-  const [statusFilter, setStatusFilter] = useState<'ALL' | OrderStatus>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | OrderStatus>('ACTIVE');
   const [typeFilter, setTypeFilter] = useState<'ALL' | OrderType>('ALL');
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | PaymentStatus>('ALL');
 
-  const loadOrders = useCallback(async (showSkeleton: boolean = false) => {
+  const loadOrders = useCallback(async (showSkeleton: boolean = false, forceRefresh: boolean = false, currentFilter: string = statusFilter) => {
     if (showSkeleton) setIsLoading(true);
+    if (forceRefresh) setIsRefreshing(true);
     try {
-      const data = await DatabaseService.getOrders();
+      const data = await DatabaseService.getOrders(forceRefresh, currentFilter);
       setOrders(data);
       return data;
     } catch (err: any) {
       console.error('Failed to load orders:', err);
+      if (forceRefresh) alert(err.message || 'Refresh failed.');
     } finally {
       if (showSkeleton) setIsLoading(false);
+      if (forceRefresh) setIsRefreshing(false);
     }
-  }, []);
+  }, [statusFilter]);
+
+  const initialLoadDone = React.useRef(false);
 
   useEffect(() => {
-    // If no cached orders exist, display skeleton loader, otherwise fetch silently in background
-    loadOrders(!cachedOrders || cachedOrders.length === 0);
-  }, [cachedOrders, loadOrders]);
+    if (!initialLoadDone.current) {
+      loadOrders(!cachedOrders || cachedOrders.length === 0, false, statusFilter);
+      initialLoadDone.current = true;
+    } else {
+      // Only refetch silently when the status filter changes
+      loadOrders(false, false, statusFilter);
+    }
+    // We intentionally exclude cachedOrders from dependencies to prevent duplicate fetches 
+    // when the cache is invalidated during a forced refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, loadOrders]);
 
   const handleOpenDetails = useCallback(async (order: Order) => {
     setSelectedOrder(order);
@@ -114,7 +127,12 @@ export function OrderManagement() {
         o.order_number.toLowerCase().includes(term) ||
         (o.customer && o.customer.name.toLowerCase().includes(term));
 
-      const matchesStatus = statusFilter === 'ALL' || o.status === statusFilter;
+      const matchesStatus = statusFilter === 'ALL' 
+        ? true 
+        : statusFilter === 'ACTIVE'
+          ? o.status !== 'CANCELLED'
+          : o.status === statusFilter;
+          
       const matchesType = typeFilter === 'ALL' || o.order_type === typeFilter;
       
       let matchesPayment = true;
@@ -150,11 +168,12 @@ export function OrderManagement() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => loadOrders(true)}
-          leftIcon={<RefreshCw className="w-3.5 h-3.5 text-resto-terracotta-600" />}
+          onClick={() => loadOrders(false, true)}
+          disabled={isRefreshing}
+          leftIcon={<RefreshCw className={`w-3.5 h-3.5 text-resto-terracotta-600 ${isRefreshing ? 'animate-spin' : ''}`} />}
           className="text-xs font-semibold"
         >
-          {isRtl ? 'تحديث السجل' : 'Refresh Orders'}
+          {isRefreshing ? (isRtl ? 'جاري التحديث...' : 'Refreshing...') : (isRtl ? 'تحديث السجل' : 'Refresh Orders')}
         </Button>
       </div>
 
@@ -210,6 +229,7 @@ export function OrderManagement() {
             onChange={(e) => setStatusFilter(e.target.value as any)}
             className="h-9 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
           >
+            <option value="ACTIVE">Active Orders Only</option>
             <option value="ALL">All Order Statuses</option>
             <option value="PENDING">PENDING</option>
             <option value="CONFIRMED">CONFIRMED</option>

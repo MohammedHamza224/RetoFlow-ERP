@@ -100,6 +100,17 @@ export const ProductCatalog = React.memo(function ProductCatalog({ products, cat
                       : 'cursor-pointer bg-card hover:border-resto-terracotta-500 hover:shadow-card active:scale-95'
                   }`}
                 >
+                  {product.image_url && (
+                    <div className="w-full h-24 mb-2 -mt-3 -mx-3 bg-slate-100 dark:bg-slate-900 rounded-t-xl overflow-hidden shrink-0">
+                      <img 
+                        src={product.image_url} 
+                        alt={product.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                        onError={(e) => (e.target as HTMLElement).style.display = 'none'}
+                      />
+                    </div>
+                  )}
                   <div className="space-y-1.5">
                     <div className="flex items-start justify-between gap-1">
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-100 line-clamp-2 leading-tight">
