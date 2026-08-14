@@ -84,41 +84,41 @@ export function OrderManagement() {
   const handleAdvanceStatus = useCallback(async (orderId: string, nextStatus: OrderStatus) => {
     try {
       await DatabaseService.advanceOrderStatus(orderId, nextStatus, user?.id);
-      const updatedList = await loadOrders(false);
-      if (updatedList) {
-        const updatedOrder = updatedList.find(o => o.id === orderId);
-        if (updatedOrder) setSelectedOrder(updatedOrder);
-      }
+      
+      const updatedOrder = await DatabaseService.getOrderDetails(orderId);
+      setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
+      setSelectedOrder(updatedOrder);
+      DatabaseService.updateOrderCache(updatedOrder);
     } catch (err: any) {
       alert(err.message || 'Status transition failed.');
     }
-  }, [user, loadOrders]);
+  }, [user]);
 
   const handleCancelOrder = useCallback(async (orderId: string, reason: CancellationReason) => {
     try {
       await DatabaseService.cancelOrder(orderId, user?.id, reason);
-      const updatedList = await loadOrders(false);
-      if (updatedList) {
-        const updatedOrder = updatedList.find(o => o.id === orderId);
-        if (updatedOrder) setSelectedOrder(updatedOrder);
-      }
+      
+      const updatedOrder = await DatabaseService.getOrderDetails(orderId);
+      setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
+      setSelectedOrder(updatedOrder);
+      DatabaseService.updateOrderCache(updatedOrder);
     } catch (err: any) {
       alert(err.message || 'Cancellation failed.');
     }
-  }, [user, loadOrders]);
+  }, [user]);
 
   const handleRefundPayment = useCallback(async (orderId: string) => {
     try {
       await DatabaseService.refundCompletedPayment(orderId, user?.id);
-      const updatedList = await loadOrders(false);
-      if (updatedList) {
-        const updatedOrder = updatedList.find(o => o.id === orderId);
-        if (updatedOrder) setSelectedOrder(updatedOrder);
-      }
+      
+      const updatedOrder = await DatabaseService.getOrderDetails(orderId);
+      setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
+      setSelectedOrder(updatedOrder);
+      DatabaseService.updateOrderCache(updatedOrder);
     } catch (err: any) {
       alert(err.message || 'Refund failed.');
     }
-  }, [user, loadOrders]);
+  }, [user]);
 
   const filteredOrders = useMemo(() => {
     const term = deferredSearchTerm.toLowerCase().trim();

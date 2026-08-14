@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { AuthService, UserProfile } from '@/services/auth.service';
 import { UserRole } from '@/types/database.types';
 
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
   }, []);
 
-  const login = async (email: string, password?: string) => {
+  const login = useCallback(async (email: string, password?: string) => {
     setIsLoading(true);
     try {
       const profile = await AuthService.login(email, password);
@@ -42,9 +42,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setIsLoading(true);
     try {
       await AuthService.logout();
@@ -52,15 +52,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const updateUserProfile = async (newName: string) => {
+  const updateUserProfile = useCallback(async (newName: string) => {
     if (!user) throw new Error('User is not authenticated.');
     const updated = await AuthService.updateUserProfile(user.id, newName);
     setUser(updated);
-  };
+  }, [user]);
 
-  const switchDemoRole = async (role: UserRole) => {
+  const switchDemoRole = useCallback(async (role: UserRole) => {
     if (!user) return;
     
     // 1. Optimistic UI update for instant role switching without freezing
@@ -86,25 +86,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error("Role switch preparation failed", err);
     }
-  };
+  }, [user]);
 
-  const isAllowed = (moduleId: string): boolean => {
+  const isAllowed = useCallback((moduleId: string): boolean => {
     if (!user) return false;
     return AuthService.isModuleAllowed(user.role_name, moduleId);
-  };
+  }, [user]);
+
+  const contextValue = useMemo(() => ({
+    user,
+    isLoading,
+    login,
+    logout,
+    updateUserProfile,
+    isAllowed,
+    switchDemoRole,
+  }), [user, isLoading, login, logout, updateUserProfile, isAllowed, switchDemoRole]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        login,
-        logout,
-        updateUserProfile,
-        isAllowed,
-        switchDemoRole,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

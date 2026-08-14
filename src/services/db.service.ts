@@ -333,6 +333,15 @@ class ServiceCacheStore {
   invalidateOrders() {
     this.orders = null;
   }
+  
+  updateOrder(updatedOrder: Order) {
+    if (this.orders && this.orders.data) {
+      const index = this.orders.data.findIndex(o => o.id === updatedOrder.id);
+      if (index !== -1) {
+        this.orders.data[index] = updatedOrder;
+      }
+    }
+  }
 
   invalidateSuppliers() {
     this.suppliers = null;
@@ -532,22 +541,28 @@ export class DatabaseService {
   }
 
   static async deleteCustomer(userId: string | undefined, id: string): Promise<void> {
-    console.log('[CustomerDelete] db.service.ts deleteCustomer called with id:', id);
     this.validateRolePermission(userId, ['ADMIN', 'MANAGER', 'CASHIER']);
 
-    console.log('[CustomerDelete] Supabase DELETE started');
-    const { data, error, status } = await supabase
+    const { count, error: countError } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('customer_id', id);
+
+    if (countError) {
+      throw new Error(`Failed to verify customer history: ${countError.message}`);
+    }
+
+    if (count && count > 0) {
+      throw new Error('[HISTORICAL_DATA] Cannot delete this customer because they have existing orders.');
+    }
+
+    const { data, error } = await supabase
       .from('customers')
       .delete()
       .eq('id', id)
       .select();
 
-    console.log('[CustomerDelete] Supabase response status:', status);
-    console.log('[CustomerDelete] Supabase data:', data);
-    console.log('[CustomerDelete] Supabase error:', error);
-
     if (error) {
-      console.error('[CustomerDelete] Supabase deleteCustomer error:', error.message);
       if (error.code === '23503' || error.message.includes('foreign key constraint')) {
         throw new Error('[HISTORICAL_DATA] Cannot delete this customer because they have historical orders or transactions attached to them.');
       }
@@ -555,10 +570,9 @@ export class DatabaseService {
     }
 
     if (!data || data.length === 0) {
-      console.log('[CustomerDelete] WARNING: No rows were deleted. Either the ID does not exist or RLS blocked the deletion.');
+      throw new Error('Failed to delete customer. The record may have already been removed.');
     }
 
-    console.log('[CustomerDelete] updating customer cache');
     serviceCache.invalidateCustomers();
   }
 
@@ -1209,7 +1223,8 @@ export class DatabaseService {
     }
 
     if (data && data.success) {
-      serviceCache.invalidateOrders();
+      // Opt out of full list invalidation; we will update specific orders locally
+      // serviceCache.invalidateOrders();
       serviceCache.invalidateAnalytics();
       return data;
     }
@@ -1230,12 +1245,17 @@ export class DatabaseService {
     }
 
     if (data && data.success) {
-      serviceCache.invalidateOrders();
+      // Opt out of full list invalidation; we will update specific orders locally
+      // serviceCache.invalidateOrders();
       serviceCache.invalidateAnalytics();
       return data;
     }
 
     throw new Error('Refund failed: No valid response from server.');
+  }
+  
+  static updateOrderCache(updatedOrder: Order) {
+    serviceCache.updateOrder(updatedOrder);
   }
 
   static async getSuppliers(): Promise<Supplier[]> {

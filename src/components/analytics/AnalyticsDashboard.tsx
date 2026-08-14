@@ -114,8 +114,8 @@ export function AnalyticsDashboard() {
       setMetrics(cached.metrics);
       setBreakdown(cached.breakdown);
       setIsLoading(false); // Don't show skeleton
-    } else {
-      setIsLoading(true); // Only show skeleton if we have NO data
+    } else if (!metrics) {
+      setIsLoading(true); // Only show skeleton if we have NO data at all
     }
     
     setErrorMsg('');
