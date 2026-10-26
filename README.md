@@ -2,7 +2,7 @@
 
 RestoFlow is a full-featured **Restaurant Management & Point of Sale (POS) System** designed to manage core restaurant operations through a centralized and modern web application.
 
-The project was designed and developed using **Google Antigravity**, with **ChatGPT** used as an AI-assisted development partner for requirements analysis, prompt engineering, debugging, solution review, performance optimization, and technical problem solving.
+The project was designed and developed using **Google Antigravity**, with **ChatGPT** used as an AI-assisted development partner for requirements analysis, prompt engineering, debugging, solution review, performance optimization, and technical problem-solving.
 
 ## 🎯 Project Overview
 
@@ -117,7 +117,7 @@ The application was tested across major workflows including:
 * Analytics
 * Refresh & re-login flows
 
-The project was also validated through TypeScript checks and production builds before deployment.
+The project also passed TypeScript checks and production builds before deployment.
 
 ## 🚀 Development & Deployment Workflow
 
@@ -143,7 +143,7 @@ Production
 
 ## 🤖 AI-Assisted Development
 
-A major part of this project was using AI as a development accelerator.
+A major part of this project was using AI to accelerate development.
 
 **Google Antigravity** was used for system design and implementation, while **ChatGPT** supported:
 
@@ -166,7 +166,8 @@ https://reto-flow-erp.vercel.app/
 ## 💼 Portfolio
 
 **Mohammed Hamza — Data Analytics Portfolio:**
-https://vision-data-pro.lovable.app/
+
+ https://mohammed-hamza-pro.lovable.app/
 
 ## 👨‍💻 Author
 
