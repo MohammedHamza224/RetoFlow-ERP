@@ -129,7 +129,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
                 setErrorMessage('');
               }}
               leftIcon={<User className="w-4 h-4 text-resto-terracotta-600" />}
-              placeholder="Full Name"
+              placeholder={isRtl ? 'الاسم الكامل' : 'Full Name'}
               className="h-10 text-xs"
               required
             />

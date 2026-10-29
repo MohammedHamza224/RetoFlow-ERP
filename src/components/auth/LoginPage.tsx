@@ -125,7 +125,7 @@ export function LoginPage() {
           {/* Quick Demo Role Credentials Selection */}
           <div className="p-3.5 rounded-xl bg-resto-charcoal-900 border border-resto-charcoal-800 space-y-2.5">
             <span className="text-[11px] text-slate-400 font-medium block">
-              {isRtl ? 'اختر الحساب للتجربة السريعة:' : 'Select Demo Staff Role:'}
+              {t('auth.selectAccount')}
             </span>
             <div className="grid grid-cols-4 gap-1.5">
               {(['ADMIN', 'MANAGER', 'CASHIER', 'STAFF'] as UserRole[]).map((r) => {

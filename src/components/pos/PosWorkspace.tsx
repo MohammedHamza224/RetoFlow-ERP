@@ -58,8 +58,9 @@ export function PosWorkspace() {
 
   useEffect(() => {
     // If we had no cache, load with skeleton, otherwise fetch silently in background
-    loadPosData(!cachedProds || cachedProds.length === 0);
-  }, [cachedProds, loadPosData]);
+    const cached = DatabaseService.getCachedProductsSync();
+    loadPosData(!cached || cached.length === 0);
+  }, [loadPosData]);
 
   const handleAddToCart = useCallback((product: Product) => {
     if (!product.is_active || product.stock_quantity <= 0) return;

@@ -18,6 +18,7 @@ export function Header({ activeTab }: HeaderProps) {
   const currentLang = i18n.language as 'en' | 'ar';
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const isRtl = currentLang === 'ar';
 
   const toggleLanguage = () => {
     const nextLang = currentLang === 'en' ? 'ar' : 'en';
@@ -48,6 +49,7 @@ export function Header({ activeTab }: HeaderProps) {
       suppliers: t('nav.suppliers'),
       analytics: t('nav.analytics'),
       'ai-assistant': t('nav.aiAssistant'),
+      users: t('nav.users'),
       settings: t('nav.settings'),
     };
     return titleMap[tab] || t('brand.name');
@@ -62,7 +64,7 @@ export function Header({ activeTab }: HeaderProps) {
         </h1>
         <span className="text-slate-300 dark:text-slate-700 font-light hidden sm:inline">|</span>
         <span className="text-xs text-muted-foreground hidden sm:inline">
-          {t('brand.name')} &bull; Terminal 01
+          {t('brand.name')} &bull; {isRtl ? 'نقطة بيع 01' : 'Terminal 01'}
         </span>
       </div>
 
@@ -119,14 +121,14 @@ export function Header({ activeTab }: HeaderProps) {
           <button
             onClick={() => setIsProfileModalOpen(true)}
             className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-            title="Edit User Profile"
+            title={isRtl ? 'تعديل الملف الشخصي' : 'Edit User Profile'}
           >
             <div className="w-9 h-9 rounded-full bg-resto-charcoal-800 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0 border border-slate-700 font-mono">
               {user?.name?.charAt(0) || 'U'}
             </div>
             <div className="hidden xl:flex flex-col">
               <span className="text-xs font-bold text-resto-charcoal-900 dark:text-slate-100 leading-tight">
-                {user?.name || 'Authenticated User'}
+                {user?.name || (isRtl ? 'مستخدم مسجل' : 'Authenticated User')}
               </span>
               <div className="flex items-center gap-1 mt-0.5">
                 <Badge variant="warning" className="text-[10px] px-1.5 py-0">

@@ -213,10 +213,10 @@ export class AuthService {
    */
   static isModuleAllowed(role: UserRole, moduleId: string): boolean {
     const permissions: Record<UserRole, string[]> = {
-      ADMIN: ['dashboard', 'pos', 'orders', 'menu', 'tables', 'customers', 'inventory', 'suppliers', 'analytics', 'ai-assistant', 'settings'],
-      MANAGER: ['dashboard', 'pos', 'orders', 'menu', 'tables', 'customers', 'inventory', 'suppliers', 'analytics', 'ai-assistant'],
-      CASHIER: ['dashboard', 'pos', 'orders', 'menu', 'tables', 'customers', 'inventory'],
-      STAFF: ['orders', 'menu', 'tables', 'customers'],
+      ADMIN: ['dashboard', 'pos', 'orders', 'menu', 'tables', 'customers', 'inventory', 'suppliers', 'analytics', 'ai-assistant', 'users', 'settings'],
+      MANAGER: ['dashboard', 'pos', 'orders', 'menu', 'tables', 'customers', 'inventory', 'suppliers', 'analytics', 'ai-assistant', 'users'],
+      CASHIER: ['dashboard', 'pos', 'orders', 'menu', 'tables', 'customers', 'inventory', 'ai-assistant'],
+      STAFF: ['orders', 'menu', 'tables', 'customers', 'ai-assistant'],
     };
 
     const allowed = permissions[role] || [];

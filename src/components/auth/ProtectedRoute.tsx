@@ -31,21 +31,21 @@ export function ProtectedRoute({ moduleId, children, onNavigateToAllowed }: Prot
               <ShieldAlert className="w-8 h-8" />
             </div>
             <CardTitle className="text-xl font-bold text-red-950 dark:text-red-200">
-              Access Restricted
+              {t('protectedRoute.accessRestricted')}
             </CardTitle>
             <CardDescription className="text-xs text-slate-500 mt-1">
-              Enforced by Database Row Level Security (RLS) & Role Permission Matrix
+              {t('protectedRoute.accessRestrictedDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 text-center">
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
-              <span className="text-slate-500 font-medium">Your Role:</span>
+              <span className="text-slate-500 font-medium">{t('protectedRoute.yourRole')}</span>
               <Badge variant="warning" className="font-bold">
                 {user.role_name}
               </Badge>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              The module <span className="font-bold text-slate-800 dark:text-slate-200">"{moduleId.toUpperCase()}"</span> is restricted to higher administrative roles. Your current role does not have authorization to view or mutate data in this section.
+              {t('protectedRoute.modulePrefix')} <span className="font-bold text-slate-800 dark:text-slate-200">"{moduleId.toUpperCase()}"</span> {t('protectedRoute.moduleRestricted')}
             </p>
           </CardContent>
           <CardFooter className="justify-center border-t border-slate-100 dark:border-slate-800 pt-4">
@@ -56,7 +56,7 @@ export function ProtectedRoute({ moduleId, children, onNavigateToAllowed }: Prot
               onClick={() => onNavigateToAllowed && onNavigateToAllowed(fallbackModule)}
               className="w-full"
             >
-              Return to Allowed Dashboard
+              {t('protectedRoute.returnToAllowed')}
             </Button>
           </CardFooter>
         </Card>

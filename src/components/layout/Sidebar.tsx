@@ -16,6 +16,7 @@ import {
   ChevronRight,
   LogOut,
   ChefHat,
+  UserCog,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
@@ -49,6 +50,7 @@ export function Sidebar({
     { id: 'suppliers', label: t('nav.suppliers'), icon: Truck },
     { id: 'analytics', label: t('nav.analytics'), icon: BarChart3 },
     { id: 'ai-assistant', label: t('nav.aiAssistant'), icon: Bot, badge: 'AI' },
+    { id: 'users', label: t('nav.users'), icon: UserCog },
     { id: 'settings', label: t('nav.settings'), icon: Settings },
   ];
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { UserCheck, Crown, Phone, Mail, Edit2 } from 'lucide-react';
 import { Customer, CustomerType } from '@/types/database.types';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
@@ -19,14 +20,16 @@ export const CustomerCard = React.memo(function CustomerCard({
   onEdit,
   onDelete,
 }: CustomerCardProps) {
+  const { t } = useTranslation();
+
   const getCustomerBadge = (type: CustomerType) => {
     if (type === 'VIP') {
-      return <Badge variant="warning" className="flex items-center gap-1 bg-amber-500 text-white"><Crown className="w-3 h-3" /> VIP Guest</Badge>;
+      return <Badge variant="warning" className="flex items-center gap-1 bg-amber-500 text-white"><Crown className="w-3 h-3" /> {t('customers.vip')}</Badge>;
     }
     if (type === 'REGULAR') {
-      return <Badge variant="success" className="flex items-center gap-1"><UserCheck className="w-3 h-3" /> Regular</Badge>;
+      return <Badge variant="success" className="flex items-center gap-1"><UserCheck className="w-3 h-3" /> {t('customers.regular')}</Badge>;
     }
-    return <Badge variant="outline" className="text-slate-500">Walk-in Guest</Badge>;
+    return <Badge variant="outline" className="text-slate-500">{t('customers.guest')}</Badge>;
   };
 
   const isWalkInGuest = customer.id === 'c0000000-0000-0000-0000-000000000001';
@@ -42,7 +45,7 @@ export const CustomerCard = React.memo(function CustomerCard({
             <CardTitle className="text-base font-bold truncate">{customer.name}</CardTitle>
             {customer.is_active === false && (
               <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-sm bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                Inactive
+                {t('common.inactive')}
               </span>
             )}
           </div>
@@ -53,11 +56,11 @@ export const CustomerCard = React.memo(function CustomerCard({
       <CardContent className="pb-3 space-y-2 text-xs text-slate-600 dark:text-slate-400">
         <div className="flex items-center gap-2">
           <Phone className="w-3.5 h-3.5 text-resto-terracotta-600 shrink-0" />
-          <span className="font-mono">{customer.phone || 'No phone recorded'}</span>
+          <span className="font-mono">{customer.phone || t('customers.noPhone')}</span>
         </div>
         <div className="flex items-center gap-2">
           <Mail className="w-3.5 h-3.5 text-resto-terracotta-600 shrink-0" />
-          <span className="truncate">{customer.email || 'No email recorded'}</span>
+          <span className="truncate">{customer.email || t('customers.noEmail')}</span>
         </div>
       </CardContent>
 
@@ -70,7 +73,7 @@ export const CustomerCard = React.memo(function CustomerCard({
               onClick={() => onDelete(customer)}
               className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
             >
-              Delete
+              {t('customers.deleteCustomer')}
             </Button>
           )}
           <Button
@@ -79,7 +82,7 @@ export const CustomerCard = React.memo(function CustomerCard({
             onClick={() => onEdit(customer)}
             leftIcon={<Edit2 className="w-3.5 h-3.5" />}
           >
-            Edit Profile
+            {t('customers.editCustomer')}
           </Button>
         </CardFooter>
       )}

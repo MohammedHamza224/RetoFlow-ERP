@@ -45,20 +45,20 @@ export function OrderCancelModal({
     }
   };
 
-  const reasons: Array<{ value: CancellationReason; labelEn: string; labelAr: string }> = [
-    { value: 'CUSTOMER_REQUEST', labelEn: 'Customer Request', labelAr: 'بناءً على طلب العميل' },
-    { value: 'OUT_OF_STOCK', labelEn: 'Item Out of Stock', labelAr: 'نفاد مخزون الصنف' },
-    { value: 'DUPLICATE_ORDER', labelEn: 'Duplicate Order Entry', labelAr: 'إدخال طلب مكرر' },
-    { value: 'WRONG_ORDER', labelEn: 'Wrong Order Details', labelAr: 'تفاصيل طلب خاطئة' },
-    { value: 'OTHER', labelEn: 'Other Reason', labelAr: 'سبب تشغيلي آخر' },
+  const reasons: Array<{ value: CancellationReason; label: string }> = [
+    { value: 'CUSTOMER_REQUEST', label: t('orders.reasonCustomer') },
+    { value: 'OUT_OF_STOCK', label: t('orders.reasonOutOfStock') },
+    { value: 'DUPLICATE_ORDER', label: t('orders.reasonDuplicate') },
+    { value: 'WRONG_ORDER', label: t('orders.reasonWrong') },
+    { value: 'OTHER', label: t('orders.reasonOther') },
   ];
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isRtl ? `إلغاء الطلب (${order.order_number})` : `Cancel Order (${order.order_number})`}
-      description={isRtl ? 'الإلغاء يعيد المنتجات إلى المخزون تلقائياً إذا كان قد تم خصمها.' : 'Cancelling an order restores inventory quantities atomically for uncompleted orders.'}
+      title={`${t('orders.cancelModalTitle')} (${order.order_number})`}
+      description={t('orders.cancelModalDesc')}
       maxWidth="sm"
     >
       <form onSubmit={handleSubmit} className="space-y-4 py-2 select-none">
@@ -72,18 +72,16 @@ export function OrderCancelModal({
         <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 text-xs space-y-1">
           <div className="flex items-center gap-1.5 font-bold">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>{isRtl ? 'تأكيد الإلغاء:' : 'Cancellation Warning:'}</span>
+            <span>{t('orders.cancellationWarning')}</span>
           </div>
           <p className="text-[11px] text-amber-800 dark:text-amber-300">
-            {isRtl
-              ? `سيتم تغيير حالة الطلب ${order.order_number} إلى "ملغى" وإرجاع المخزون.`
-              : `Order ${order.order_number} status will change to CANCELLED and exact item stock will be restored.`}
+            {t('orders.cancellationWarningMsg')}
           </p>
         </div>
 
         <div className="space-y-2">
           <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            {isRtl ? 'سبب الإلغاء (مطلوب) *' : 'Cancellation Reason (Required) *'}
+            {t('orders.cancellationReason')}
           </label>
           <div className="space-y-1.5">
             {reasons.map((r) => (
@@ -103,7 +101,7 @@ export function OrderCancelModal({
                   onChange={() => setSelectedReason(r.value)}
                   className="text-red-600 focus:ring-red-500"
                 />
-                <span>{isRtl ? r.labelAr : r.labelEn}</span>
+                <span>{r.label}</span>
               </label>
             ))}
           </div>
@@ -111,7 +109,7 @@ export function OrderCancelModal({
 
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <Button variant="ghost" size="md" type="button" onClick={onClose}>
-            {isRtl ? 'إلغاء' : 'Back'}
+            {t('common.cancel')}
           </Button>
 
           <Button
@@ -122,7 +120,7 @@ export function OrderCancelModal({
             disabled={isSubmitting}
             className="font-bold bg-red-600 hover:bg-red-700"
           >
-            {isSubmitting ? (isRtl ? 'جاري الإلغاء...' : 'Cancelling...') : (isRtl ? 'تأكيد إرجاع المخزون والإلغاء' : 'Confirm Order Cancellation')}
+            {isSubmitting ? t('common.loading') : t('orders.confirmCancelBtn')}
           </Button>
         </div>
       </form>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Edit2, Power, AlertTriangle, PackageX, CheckCircle2, Utensils } from 'lucide-react';
 import { Product } from '@/types/database.types';
 import { formatCurrency } from '@/lib/utils';
@@ -19,20 +20,21 @@ export const ProductCard = React.memo(function ProductCard({
   onEdit,
   onToggleStatus,
 }: ProductCardProps) {
+  const { t } = useTranslation();
   const isOutOfStock = product.stock_quantity === 0;
   const isLowStock = product.stock_quantity > 0 && product.stock_quantity <= product.minimum_stock;
 
   const getStockBadge = () => {
     if (!product.is_active) {
-      return <Badge variant="outline" className="bg-slate-100 dark:bg-slate-800 text-slate-500">INACTIVE</Badge>;
+      return <Badge variant="outline" className="bg-slate-100 dark:bg-slate-800 text-slate-500">{t('common.inactive')}</Badge>;
     }
     if (isOutOfStock) {
-      return <Badge variant="destructive" className="flex items-center gap-1"><PackageX className="w-3 h-3" /> OUT OF STOCK</Badge>;
+      return <Badge variant="destructive" className="flex items-center gap-1"><PackageX className="w-3 h-3" /> {t('menu.outOfStock')}</Badge>;
     }
     if (isLowStock) {
-      return <Badge variant="warning" className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> LOW STOCK ({product.stock_quantity})</Badge>;
+      return <Badge variant="warning" className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {t('menu.lowStock')} ({product.stock_quantity})</Badge>;
     }
-    return <Badge variant="success" className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> IN STOCK ({product.stock_quantity})</Badge>;
+    return <Badge variant="success" className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {t('menu.inStock')} ({product.stock_quantity})</Badge>;
   };
 
   return (
@@ -59,7 +61,7 @@ export const ProductCard = React.memo(function ProductCard({
         ) : (
           <div className="flex flex-col items-center justify-center text-slate-400 gap-1.5">
             <Utensils className="w-8 h-8 text-slate-300 dark:text-slate-700" />
-            <span className="text-[10px] font-medium text-slate-400">No Image</span>
+            <span className="text-[10px] font-medium text-slate-400">{t('menu.noImage')}</span>
           </div>
         )}
 
@@ -97,14 +99,14 @@ export const ProductCard = React.memo(function ProductCard({
         {/* Pricing & Margin Summary */}
         <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
           <div>
-            <span className="text-[10px] uppercase font-semibold text-slate-400 block">Selling Price</span>
+            <span className="text-[10px] uppercase font-semibold text-slate-400 block">{t('menu.sellingPrice')}</span>
             <span className="text-base font-extrabold text-resto-terracotta-600 font-display">
               {formatCurrency(product.price)}
             </span>
           </div>
           {isManagerOrAdmin && (
             <div className="text-right">
-              <span className="text-[10px] uppercase font-semibold text-slate-400 block">Cost Reference</span>
+              <span className="text-[10px] uppercase font-semibold text-slate-400 block">{t('menu.costPrice')}</span>
               <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                 {formatCurrency(product.cost)}
               </span>
@@ -122,7 +124,7 @@ export const ProductCard = React.memo(function ProductCard({
             onClick={() => onEdit(product)}
             leftIcon={<Edit2 className="w-3.5 h-3.5" />}
           >
-            Edit
+            {t('common.edit')}
           </Button>
 
           <Button
@@ -132,7 +134,7 @@ export const ProductCard = React.memo(function ProductCard({
             leftIcon={<Power className="w-3.5 h-3.5" />}
             className={product.is_active ? 'text-amber-600 hover:text-amber-700' : 'text-emerald-600'}
           >
-            {product.is_active ? 'Deactivate' : 'Reactivate'}
+            {product.is_active ? t('menu.deactivate') : t('menu.reactivate')}
           </Button>
         </CardFooter>
       )}

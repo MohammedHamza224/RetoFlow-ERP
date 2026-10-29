@@ -9,21 +9,29 @@ import {
   MapPin,
   FileText,
   Edit2,
-  RefreshCw,
-  ShieldAlert,
   Trash2,
+  Receipt,
+  PackageCheck,
+  DollarSign,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardList,
 } from 'lucide-react';
 import { DatabaseService } from '@/services/db.service';
 import { useAuth } from '@/context/AuthContext';
-import { Supplier } from '@/types/database.types';
+import { Supplier, SupplierStatement } from '@/types/database.types';
+import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
 
 export function SupplierManagement() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const isRtl = i18n.language === 'ar';
   const canEdit = user?.role_name === 'ADMIN' || user?.role_name === 'MANAGER';
@@ -37,9 +45,15 @@ export function SupplierManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  
+
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingSupplier, setDeletingSupplier] = useState<Supplier | null>(null);
+
+  // Supplier Statement State
+  const [statementSupplier, setStatementSupplier] = useState<Supplier | null>(null);
+  const [statementData, setStatementData] = useState<SupplierStatement | null>(null);
+  const [isStatementLoading, setIsStatementLoading] = useState(false);
+  const [statementTab, setStatementTab] = useState<'invoices' | 'purchases' | 'receipts'>('invoices');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -93,16 +107,30 @@ export function SupplierManagement() {
     setIsDeleteDialogOpen(true);
   };
 
+  const openStatementModal = async (sup: Supplier) => {
+    setStatementSupplier(sup);
+    setIsStatementLoading(true);
+    setStatementTab('invoices');
+    try {
+      const data = await DatabaseService.getSupplierStatement(sup.id);
+      setStatementData(data);
+    } catch (err: any) {
+      console.error('Failed to load supplier statement:', err);
+    } finally {
+      setIsStatementLoading(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deletingSupplier) return;
     setIsSubmitting(true);
     try {
       await DatabaseService.deleteSupplier(user?.id, deletingSupplier.id);
+      setSuppliers(prev => prev.filter(s => s.id !== deletingSupplier.id));
       setIsDeleteDialogOpen(false);
       setDeletingSupplier(null);
-      await loadSuppliers(false);
     } catch (err: any) {
-      alert(err.message);
+      alert(err.message || t('suppliers.deleteFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -113,21 +141,22 @@ export function SupplierManagement() {
     setFormError('');
 
     if (!formData.name.trim()) {
-      setFormError('Supplier name is required.');
+      setFormError(t('suppliers.nameRequired'));
       return;
     }
 
     setIsSubmitting(true);
     try {
       if (editingSupplier) {
-        await DatabaseService.updateSupplier(user?.id, editingSupplier.id, formData);
+        const updated = await DatabaseService.updateSupplier(user?.id, editingSupplier.id, formData);
+        setSuppliers(prev => prev.map(s => (s.id === editingSupplier.id ? updated : s)));
       } else {
-        await DatabaseService.createSupplier(user?.id, formData);
+        const created = await DatabaseService.createSupplier(user?.id, formData);
+        setSuppliers(prev => [created, ...prev]);
       }
       setIsModalOpen(false);
-      await loadSuppliers(false);
     } catch (err: any) {
-      setFormError(err.message || 'Operation failed.');
+      setFormError(err.message || t('suppliers.saveFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -135,25 +164,27 @@ export function SupplierManagement() {
 
   const filteredSuppliers = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
-    return suppliers.filter(s =>
-      !term ||
-      s.name.toLowerCase().includes(term) ||
-      (s.tax_number && s.tax_number.includes(term)) ||
-      (s.phone && s.phone.includes(term))
-    );
+    return suppliers.filter(s => {
+      return (
+        !term ||
+        s.name.toLowerCase().includes(term) ||
+        (s.phone && s.phone.includes(term)) ||
+        (s.tax_number && s.tax_number.includes(term))
+      );
+    });
   }, [suppliers, searchTerm]);
 
   return (
-    <div className="space-y-6 select-none">
+    <div className="space-y-6">
       {/* Header Controls */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h3 className="font-display text-xl font-bold text-resto-charcoal-900 dark:text-slate-100 flex items-center gap-2">
             <Truck className="w-5 h-5 text-resto-terracotta-600" />
-            Supplier Directory & Procurement
+            {t('suppliers.title')}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage ingredient & product suppliers, tax numbers, and contact directories ({suppliers.length} Registered Suppliers)
+            {t('suppliers.subtitle')} ({suppliers.length} {t('suppliers.supplierCount')})
           </p>
         </div>
 
@@ -165,7 +196,7 @@ export function SupplierManagement() {
             leftIcon={<Plus className="w-4 h-4" />}
             className="bg-resto-terracotta-600 hover:bg-resto-terracotta-500 font-bold"
           >
-            Add New Supplier
+            {t('suppliers.addSupplier')}
           </Button>
         )}
       </div>
@@ -174,7 +205,7 @@ export function SupplierManagement() {
       <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-card border border-slate-200 dark:border-slate-800 shadow-subtle">
         <div className="w-full md:w-80">
           <Input
-            placeholder="Search by supplier name, phone, or tax number..."
+            placeholder={t('suppliers.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             leftIcon={<Search className="w-4 h-4" />}
@@ -192,17 +223,35 @@ export function SupplierManagement() {
         </div>
       )}
 
+      {/* Empty State */}
+      {!isLoading && filteredSuppliers.length === 0 && (
+        <div className="p-12 text-center bg-card rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
+            <Truck className="w-6 h-6" />
+          </div>
+          <h4 className="font-display text-base font-bold text-slate-800 dark:text-slate-200">
+            {t('suppliers.noSuppliers')}
+          </h4>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            {t('suppliers.noSuppliersDesc')}
+          </p>
+        </div>
+      )}
+
       {/* Suppliers Grid */}
-      {!isLoading && (
+      {!isLoading && filteredSuppliers.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredSuppliers.map(sup => (
-            <Card key={sup.id} className="relative overflow-hidden bg-card hover:shadow-card transition-all border flex flex-col justify-between">
+            <Card
+              key={sup.id}
+              className="relative overflow-hidden bg-card hover:shadow-card transition-all border flex flex-col justify-between"
+            >
               <CardHeader className="pb-3 flex flex-row items-start justify-between gap-3">
                 <div className="space-y-1 min-w-0 flex-1">
                   <CardTitle className="text-base font-bold truncate">{sup.name}</CardTitle>
                   <div className="flex items-center gap-1 text-[11px] font-mono text-slate-400">
                     <FileText className="w-3 h-3 text-resto-terracotta-600" />
-                    <span>TAX VAT: {sup.tax_number || 'N/A'}</span>
+                    <span>{t('suppliers.taxVat')} {sup.tax_number || t('suppliers.notAvailable')}</span>
                   </div>
                 </div>
               </CardHeader>
@@ -210,151 +259,385 @@ export function SupplierManagement() {
               <CardContent className="pb-3 space-y-2 text-xs text-slate-600 dark:text-slate-400">
                 <div className="flex items-center gap-2">
                   <Phone className="w-3.5 h-3.5 text-resto-terracotta-600 shrink-0" />
-                  <span className="font-mono">{sup.phone || 'No phone recorded'}</span>
+                  <span className="font-mono">{sup.phone || t('suppliers.noPhone')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="w-3.5 h-3.5 text-resto-terracotta-600 shrink-0" />
-                  <span className="truncate">{sup.email || 'No email recorded'}</span>
+                  <span className="truncate">{sup.email || t('suppliers.noEmail')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5 text-resto-terracotta-600 shrink-0" />
-                  <span className="truncate">{sup.address || 'Riyadh, Saudi Arabia'}</span>
+                  <span className="truncate">{sup.address || t('suppliers.defaultAddress')}</span>
                 </div>
               </CardContent>
 
-              {canEdit && (
-                <CardFooter className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 bg-slate-50/50 dark:bg-slate-900/20">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEditModal(sup)}
-                    leftIcon={<Edit2 className="w-3.5 h-3.5" />}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openDeleteModal(sup)}
-                    leftIcon={<Trash2 className="w-3.5 h-3.5" />}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  >
-                    Delete
-                  </Button>
-                </CardFooter>
-              )}
+              <CardFooter className="pt-2.5 pb-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/20 text-xs">
+                {/* Statement Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openStatementModal(sup)}
+                  leftIcon={<ClipboardList className="w-3.5 h-3.5 text-resto-terracotta-600" />}
+                  className="h-8 text-xs font-bold"
+                >
+                  {t('suppliers.viewStatement')}
+                </Button>
+
+                {canEdit && (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEditModal(sup)}
+                      className="h-8 text-xs"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openDeleteModal(sup)}
+                      className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </CardFooter>
             </Card>
           ))}
         </div>
       )}
 
-      {/* Create/Edit Supplier Modal */}
+      {/* Create / Edit Supplier Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingSupplier ? 'Edit Supplier Record' : 'Register New Supplier'}
-        description="Supplier contacts enable procurement purchase order tracking."
-        maxWidth="sm"
+        title={editingSupplier ? t('suppliers.editModalTitle') : t('suppliers.createModalTitle')}
+        description={t('suppliers.subtitle')}
       >
-        <form onSubmit={handleSubmit} className="space-y-4 py-2 select-none">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-300 text-xs font-medium flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 shrink-0 text-red-500" />
-              <span>{formError}</span>
+            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-300 text-xs font-medium">
+              {formError}
             </div>
           )}
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Supplier Name *</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('suppliers.nameLabel')}</label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g. Almarai Food Distribution Ltd."
+              placeholder={t('suppliers.namePlaceholder')}
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Phone Number</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('suppliers.phoneLabel')}</label>
               <Input
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+966 11 000 0000"
+                placeholder="+966501234567"
               />
             </div>
-
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Tax Number (VAT)</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('suppliers.emailLabel')}</label>
               <Input
-                value={formData.tax_number}
-                onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
-                placeholder="300000000000003"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="supplier@company.com"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('suppliers.taxLabel')}</label>
             <Input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="supplier@company.sa"
+              value={formData.tax_number}
+              onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
+              placeholder="310123456700003"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Commercial Address</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('suppliers.addressLabel')}</label>
             <Input
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="King Fahd Road, Riyadh"
+              placeholder={t('suppliers.addressPlaceholder')}
             />
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
             <Button variant="ghost" size="md" type="button" onClick={() => setIsModalOpen(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
-            <Button variant="primary" size="md" type="submit" isLoading={isSubmitting} className="bg-resto-terracotta-600">
-              {editingSupplier ? 'Save Supplier' : 'Register Supplier'}
+            <Button
+              variant="primary"
+              size="md"
+              type="submit"
+              isLoading={isSubmitting}
+              className="bg-resto-terracotta-600 hover:bg-resto-terracotta-500 font-bold"
+            >
+              {t('common.save')}
             </Button>
           </div>
         </form>
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        title="Confirm Deletion"
-        description="Are you sure you want to delete this supplier?"
-        maxWidth="sm"
-      >
-        <div className="py-2 space-y-4 select-none">
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Supplier: <span className="font-bold text-resto-charcoal-900 dark:text-white">{deletingSupplier?.name}</span>
-          </p>
-          <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
-            This action cannot be undone. If this supplier has existing purchase orders, deletion will be blocked to protect your financial records.
-          </p>
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <Button variant="ghost" size="md" onClick={() => setIsDeleteDialogOpen(false)} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button 
-              variant="primary" 
-              size="md" 
-              onClick={handleDelete} 
-              isLoading={isSubmitting} 
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Confirm Delete
-            </Button>
+      {deletingSupplier && (
+        <Modal
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          title={t('suppliers.deleteModalTitle')}
+          description={t('suppliers.deleteConfirmMessage', { name: deletingSupplier.name })}
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <Button variant="ghost" size="md" onClick={() => setIsDeleteDialogOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleDelete}
+                isLoading={isSubmitting}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold"
+              >
+                {t('common.delete')}
+              </Button>
+            </div>
           </div>
-        </div>
-      </Modal>
+        </Modal>
+      )}
+
+      {/* Supplier Statement & Transaction History Modal */}
+      {statementSupplier && (
+        <Modal
+          isOpen={!!statementSupplier}
+          onClose={() => {
+            setStatementSupplier(null);
+            setStatementData(null);
+          }}
+          title={`${t('suppliers.statementTitle')} — ${statementSupplier.name}`}
+          description={t('suppliers.statementDesc')}
+          maxWidth="2xl"
+        >
+          <div className="space-y-5 text-xs">
+            {isStatementLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-20 rounded-xl" />
+                <Skeleton className="h-40 rounded-xl" />
+              </div>
+            ) : statementData ? (
+              <>
+                {/* 4 Financial KPI Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-[11px] text-slate-500 block">{t('suppliers.statementTotalOrders')}</span>
+                    <span className="text-base font-black font-mono text-slate-800 dark:text-slate-200">
+                      {statementData.total_orders}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-[11px] text-slate-500 block">{t('suppliers.statementTotalOrderedAmount')}</span>
+                    <span className="text-base font-black font-mono text-slate-800 dark:text-slate-200">
+                      {formatCurrency(statementData.total_order_amount)}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-[11px] text-slate-500 block">{t('suppliers.statementTotalInvoiced')}</span>
+                    <span className="text-base font-black font-mono text-slate-800 dark:text-slate-200">
+                      {formatCurrency(statementData.total_invoiced)}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-[11px] text-slate-500 block">{t('suppliers.statementBalanceDue')}</span>
+                    <span
+                      className={`text-base font-black font-mono ${
+                        statementData.outstanding_balance > 0 ? 'text-rose-600' : 'text-emerald-600'
+                      }`}
+                    >
+                      {formatCurrency(statementData.outstanding_balance)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Sub Tab Switcher */}
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg w-fit text-xs font-semibold">
+                  <button
+                    onClick={() => setStatementTab('invoices')}
+                    className={`px-3 py-1.5 rounded-md transition-all ${
+                      statementTab === 'invoices'
+                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    {t('suppliers.statementInvoicesTab')} ({statementData.invoices.length})
+                  </button>
+                  <button
+                    onClick={() => setStatementTab('purchases')}
+                    className={`px-3 py-1.5 rounded-md transition-all ${
+                      statementTab === 'purchases'
+                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    {t('suppliers.statementOrdersTab')} ({statementData.purchases.length})
+                  </button>
+                  <button
+                    onClick={() => setStatementTab('receipts')}
+                    className={`px-3 py-1.5 rounded-md transition-all ${
+                      statementTab === 'receipts'
+                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    {t('suppliers.statementReceiptsTab')} ({statementData.receipts.length})
+                  </button>
+                </div>
+
+                {/* Tab Content: Invoices */}
+                {statementTab === 'invoices' && (
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+                    {statementData.invoices.length === 0 ? (
+                      <div className="p-6 text-center text-slate-400">{t('purchaseInvoices.noInvoices')}</div>
+                    ) : (
+                      <table className="w-full text-xs">
+                        <thead className="bg-slate-50 dark:bg-slate-900 font-semibold border-b border-slate-200 dark:border-slate-800">
+                          <tr>
+                            <th className="p-2 text-left">{t('purchaseInvoices.invoiceNum')}</th>
+                            <th className="p-2 text-left">{t('purchaseInvoices.issueDate')}</th>
+                            <th className="p-2 text-center">{t('common.status')}</th>
+                            <th className="p-2 text-right font-mono">{t('purchaseInvoices.totalAmount')}</th>
+                            <th className="p-2 text-right font-mono">{t('purchaseInvoices.paidAmount')}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {statementData.invoices.map(inv => (
+                            <tr key={inv.id}>
+                              <td className="p-2 font-mono font-bold">{inv.invoice_number}</td>
+                              <td className="p-2 font-mono text-slate-500">{inv.issue_date}</td>
+                              <td className="p-2 text-center">
+                                <Badge
+                                  variant={
+                                    inv.status === 'POSTED'
+                                      ? 'success'
+                                      : inv.status === 'DRAFT'
+                                      ? 'warning'
+                                      : 'destructive'
+                                  }
+                                  className="text-[9px]"
+                                >
+                                  {inv.status}
+                                </Badge>
+                              </td>
+                              <td className="p-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
+                                {formatCurrency(inv.total)}
+                              </td>
+                              <td className="p-2 text-right font-mono text-emerald-600">
+                                {formatCurrency(inv.paid_amount || 0)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                )}
+
+                {/* Tab Content: Purchase Orders */}
+                {statementTab === 'purchases' && (
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+                    {statementData.purchases.length === 0 ? (
+                      <div className="p-6 text-center text-slate-400">{t('purchases.noPurchases')}</div>
+                    ) : (
+                      <table className="w-full text-xs">
+                        <thead className="bg-slate-50 dark:bg-slate-900 font-semibold border-b border-slate-200 dark:border-slate-800">
+                          <tr>
+                            <th className="p-2 text-left">{t('purchases.orderNumber')}</th>
+                            <th className="p-2 text-left">{t('purchases.orderDate')}</th>
+                            <th className="p-2 text-center">{t('common.status')}</th>
+                            <th className="p-2 text-right font-mono">{t('purchases.totalCost')}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {statementData.purchases.map(po => (
+                            <tr key={po.id}>
+                              <td className="p-2 font-mono font-bold">{po.invoice_number}</td>
+                              <td className="p-2 font-mono text-slate-500">{po.purchase_date}</td>
+                              <td className="p-2 text-center">
+                                <Badge variant="outline" className="text-[9px]">
+                                  {po.status}
+                                </Badge>
+                              </td>
+                              <td className="p-2 text-right font-mono font-bold text-resto-terracotta-600">
+                                {formatCurrency(po.total)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                )}
+
+                {/* Tab Content: Goods Receipts */}
+                {statementTab === 'receipts' && (
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+                    {statementData.receipts.length === 0 ? (
+                      <div className="p-6 text-center text-slate-400">{t('goodsReceipts.noReceipts')}</div>
+                    ) : (
+                      <table className="w-full text-xs">
+                        <thead className="bg-slate-50 dark:bg-slate-900 font-semibold border-b border-slate-200 dark:border-slate-800">
+                          <tr>
+                            <th className="p-2 text-left">{t('goodsReceipts.receiptNumber')}</th>
+                            <th className="p-2 text-left">{t('goodsReceipts.receivedDate')}</th>
+                            <th className="p-2 text-center font-mono">{t('goodsReceipts.itemsCount')}</th>
+                            <th className="p-2 text-left">{t('common.notes')}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {statementData.receipts.map(rcpt => (
+                            <tr key={rcpt.id}>
+                              <td className="p-2 font-mono font-bold text-emerald-600">{rcpt.receipt_number}</td>
+                              <td className="p-2 font-mono text-slate-500">
+                                {new Date(rcpt.received_at).toLocaleDateString()}
+                              </td>
+                              <td className="p-2 text-center font-mono">{rcpt.items?.length || 0}</td>
+                              <td className="p-2 italic text-slate-500 truncate max-w-xs">{rcpt.notes || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setStatementSupplier(null);
+                      setStatementData(null);
+                    }}
+                  >
+                    {t('common.close')}
+                  </Button>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

@@ -11,8 +11,9 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { CustomerCard } from './CustomerCard';
 
 export function CustomerManagement() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const isRtl = i18n.language === 'ar';
   const canEditCustomers = user?.role_name === 'ADMIN' || user?.role_name === 'MANAGER' || user?.role_name === 'CASHIER';
 
   // Instant Synchronous Cache Initialization for 0ms Instant Render
@@ -52,7 +53,6 @@ export function CustomerManagement() {
   }, []);
 
   useEffect(() => {
-    // If no cache was present, show skeleton, otherwise fetch silently in background
     const cached = DatabaseService.getCachedCustomersSync();
     loadCustomers(!cached || cached.length === 0);
   }, [loadCustomers]);
@@ -78,75 +78,37 @@ export function CustomerManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[CustomerCreate] Submit triggered');
-    console.log('[CustomerCreate] Form data:', formData);
-    
     setFormError('');
 
     if (!formData.name.trim()) {
-      console.log('[CustomerCreate] Validation result: Failed (Name required)');
-      setFormError('Customer name is required.');
+      setFormError(t('customers.nameRequired'));
       return;
     }
-    
-    console.log('[CustomerCreate] Validation result: Passed');
 
     setIsSubmitting(true);
     try {
       if (editingCustomer) {
-        console.log('[CustomerUpdate] Updating customer...', editingCustomer.id);
         const updated = await DatabaseService.updateCustomer(user?.id, editingCustomer.id, formData);
         setCustomers(prev => prev.map(c => c.id === editingCustomer.id ? updated : c));
       } else {
-        console.log('[CustomerCreate] Creating customer...');
-        console.log('[CustomerCreate] Payload:', formData);
         const created = await DatabaseService.createCustomer(user?.id, formData);
-        console.log('[CustomerCreate] Customer created successfully:', created);
-        console.log('[CustomerCreate] Updating customer state: adding to array');
-        setCustomers(prev => [...prev, created]);
+        setCustomers(prev => [created, ...prev]);
       }
       setIsModalOpen(false);
     } catch (err: any) {
-      console.error('[CustomerCreate] Exception caught:', err.message);
       setFormError(err.message || 'Operation failed.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (customer: Customer) => {
-    console.log('[CustomerDelete] START');
-    console.log('[CustomerDelete] customer id:', customer.id);
-    console.log('[CustomerDelete] customer name:', customer.name);
-
-    if (!window.confirm(`Are you sure you want to permanently delete customer "${customer.name}"? This action cannot be undone.`)) {
-      console.log('[CustomerDelete] User cancelled confirmation.');
-      return;
-    }
-    
-    try {
-      console.log('[CustomerDelete] calling db.service.deleteCustomer()');
-      await DatabaseService.deleteCustomer(user?.id, customer.id);
-      
-      console.log('[CustomerDelete] DELETE successful');
-      console.log('[CustomerDelete] updating React state');
-      setCustomers(prev => prev.filter(c => c.id !== customer.id));
-      console.log('[CustomerDelete] END');
-    } catch (err: any) {
-      console.log('[CustomerDelete] Caught error in UI:', err.message);
-      if (err.message?.includes('[HISTORICAL_DATA]')) {
-        const confirmDeactivate = window.confirm(
-          `This customer has historical transactions and cannot be permanently deleted. Would you like to deactivate them instead?`
-        );
-        if (confirmDeactivate) {
-          try {
-            await DatabaseService.deactivateCustomer(user?.id, customer.id);
-            setCustomers(prev => prev.map(c => c.id === customer.id ? { ...c, is_active: false } : c));
-          } catch (deactivateErr: any) {
-            alert(deactivateErr.message || 'Deactivation failed.');
-          }
-        }
-      } else {
+  const handleDelete = async (cust: Customer) => {
+    if (!canEditCustomers) return;
+    if (confirm(t('common.confirm'))) {
+      try {
+        await DatabaseService.deleteCustomer(user?.id, cust.id);
+        setCustomers(prev => prev.filter(c => c.id !== cust.id));
+      } catch (err: any) {
         alert(err.message || 'Operation failed.');
       }
     }
@@ -173,10 +135,10 @@ export function CustomerManagement() {
         <div>
           <h3 className="font-display text-xl font-bold text-resto-charcoal-900 dark:text-slate-100 flex items-center gap-2">
             <Users className="w-5 h-5 text-resto-terracotta-600" />
-            Customer Registry
+            {t('customers.title')}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage restaurant customers, phone contacts, VIP tier statuses ({customers.length} Registered)
+            {t('customers.subtitle')} ({customers.length} {t('customers.title')})
           </p>
         </div>
 
@@ -187,7 +149,7 @@ export function CustomerManagement() {
             onClick={openCreateModal}
             leftIcon={<Plus className="w-4 h-4" />}
           >
-            Add New Customer
+            {t('customers.addCustomer')}
           </Button>
         )}
       </div>
@@ -196,7 +158,7 @@ export function CustomerManagement() {
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-card border border-slate-200 dark:border-slate-800 shadow-subtle">
         <div className="w-full md:w-80">
           <Input
-            placeholder="Search by name, phone, or email..."
+            placeholder={t('customers.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             leftIcon={<Search className="w-4 h-4" />}
@@ -205,20 +167,30 @@ export function CustomerManagement() {
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="text-xs font-semibold text-slate-500">Type:</span>
-          {(['ALL', 'GUEST', 'REGULAR', 'VIP'] as const).map(t => (
-            <button
-              key={t}
-              onClick={() => setTypeFilter(t)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
-                typeFilter === t
-                  ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
-              }`}
-            >
-              {t}
-            </button>
-          ))}
+          <span className="text-xs font-semibold text-slate-500">{t('customers.type')}</span>
+          {(['ALL', 'GUEST', 'REGULAR', 'VIP'] as const).map(type => {
+            const label = type === 'ALL'
+              ? t('customers.all')
+              : type === 'VIP'
+              ? t('customers.vip')
+              : type === 'REGULAR'
+              ? t('customers.regular')
+              : t('customers.guest');
+
+            return (
+              <button
+                key={type}
+                onClick={() => setTypeFilter(type)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                  typeFilter === type
+                    ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -238,10 +210,10 @@ export function CustomerManagement() {
             <Users className="w-6 h-6" />
           </div>
           <h4 className="font-display text-base font-bold text-slate-800 dark:text-slate-200">
-            No Customers Found
+            {t('customers.noCustomers')}
           </h4>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            No customer profiles match your current search query or classification filter.
+            {t('customers.noCustomersDesc')}
           </p>
         </div>
       )}
@@ -265,8 +237,8 @@ export function CustomerManagement() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingCustomer ? 'Edit Customer Profile' : 'Register New Customer'}
-        description="Customer profiles allow phone contacts and VIP status tracking for POS orders."
+        title={editingCustomer ? t('customers.editModalTitle') : t('customers.createModalTitle')}
+        description={t('customers.modalDesc')}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
@@ -277,18 +249,18 @@ export function CustomerManagement() {
           )}
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Customer Full Name *</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('customers.name')} *</label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g. Prince Khalid Al-Saud"
+              placeholder={isRtl ? 'مثال: فيصل العتيبي' : 'e.g. Faisal Al-Otaibi'}
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Phone Number</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('customers.phone')}</label>
               <Input
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -297,37 +269,37 @@ export function CustomerManagement() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('customers.email')}</label>
               <Input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="customer@domain.sa"
+                placeholder="customer@example.com"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Customer Type / Classification *</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('customers.customerType')} *</label>
             <select
               value={formData.customer_type}
               onChange={(e) => setFormData({ ...formData, customer_type: e.target.value as CustomerType })}
               className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
               required
             >
-              <option value="GUEST">GUEST - Walk-in Guest</option>
-              <option value="REGULAR">REGULAR - Registered Regular Patron</option>
-              <option value="VIP">VIP - High Value VIP Customer</option>
+              <option value="REGULAR">{t('customers.regular')}</option>
+              <option value="VIP">{t('customers.vip')}</option>
+              <option value="GUEST">{t('customers.guest')}</option>
             </select>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
             <Button variant="ghost" size="md" type="button" onClick={() => setIsModalOpen(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
 
             <Button variant="primary" size="md" type="submit" isLoading={isSubmitting}>
-              {editingCustomer ? 'Save Profile' : 'Register Customer'}
+              {t('customers.saveCustomer')}
             </Button>
           </div>
         </form>

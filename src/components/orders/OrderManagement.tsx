@@ -19,7 +19,7 @@ import { OrderDetailsModal } from './OrderDetailsModal';
 import { OrderCard } from './OrderCard';
 
 export function OrderManagement() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const isRtl = i18n.language === 'ar';
   const currentUserRole = user?.role_name || 'STAFF';
@@ -39,7 +39,7 @@ export function OrderManagement() {
   const [typeFilter, setTypeFilter] = useState<'ALL' | OrderType>('ALL');
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | PaymentStatus>('ALL');
 
-  const loadOrders = useCallback(async (showSkeleton: boolean = false, forceRefresh: boolean = false, currentFilter: string = statusFilter) => {
+  const loadOrders = useCallback(async (showSkeleton: boolean = false, forceRefresh: boolean = false, currentFilter?: string) => {
     if (showSkeleton) setIsLoading(true);
     if (forceRefresh) setIsRefreshing(true);
     try {
@@ -53,21 +53,19 @@ export function OrderManagement() {
       if (showSkeleton) setIsLoading(false);
       if (forceRefresh) setIsRefreshing(false);
     }
-  }, [statusFilter]);
+  }, []);
 
   const initialLoadDone = React.useRef(false);
 
   useEffect(() => {
     if (!initialLoadDone.current) {
-      loadOrders(!cachedOrders || cachedOrders.length === 0, false, statusFilter);
+      const cached = DatabaseService.getCachedOrdersSync();
+      loadOrders(!cached || cached.length === 0, false, statusFilter);
       initialLoadDone.current = true;
     } else {
       // Only refetch silently when the status filter changes
       loadOrders(false, false, statusFilter);
     }
-    // We intentionally exclude cachedOrders from dependencies to prevent duplicate fetches 
-    // when the cache is invalidated during a forced refresh.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, loadOrders]);
 
   const handleOpenDetails = useCallback(async (order: Order) => {
@@ -158,10 +156,10 @@ export function OrderManagement() {
         <div>
           <h3 className="font-display text-xl font-bold text-resto-charcoal-900 dark:text-slate-100 flex items-center gap-2">
             <Receipt className="w-5 h-5 text-resto-terracotta-600" />
-            Order Lifecycle Management
+            {t('orders.title')}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Track order status progression, process cancellations with stock restoration, and execute refunds ({orders.length} Total Orders)
+            {t('orders.subtitle')} ({orders.length} {t('orders.totalOrders')})
           </p>
         </div>
 
@@ -173,7 +171,7 @@ export function OrderManagement() {
           leftIcon={<RefreshCw className={`w-3.5 h-3.5 text-resto-terracotta-600 ${isRefreshing ? 'animate-spin' : ''}`} />}
           className="text-xs font-semibold"
         >
-          {isRefreshing ? (isRtl ? 'جاري التحديث...' : 'Refreshing...') : (isRtl ? 'تحديث السجل' : 'Refresh Orders')}
+          {isRefreshing ? t('orders.refreshing') : t('orders.refreshOrders')}
         </Button>
       </div>
 
@@ -181,7 +179,7 @@ export function OrderManagement() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold uppercase text-slate-400 block">Pending Orders</span>
+            <span className="text-[10px] font-bold uppercase text-slate-400 block">{t('orders.pendingOrders')}</span>
             <span className="text-xl font-extrabold font-display text-slate-800 dark:text-slate-100">{pendingCount}</span>
           </div>
           <Clock className="w-6 h-6 text-slate-400" />
@@ -189,7 +187,7 @@ export function OrderManagement() {
 
         <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold uppercase text-amber-700 dark:text-amber-300 block">In Progress</span>
+            <span className="text-[10px] font-bold uppercase text-amber-700 dark:text-amber-300 block">{t('orders.inProgress')}</span>
             <span className="text-xl font-extrabold font-display text-amber-800 dark:text-amber-200">{inProgressCount}</span>
           </div>
           <Utensils className="w-6 h-6 text-amber-600" />
@@ -197,7 +195,7 @@ export function OrderManagement() {
 
         <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-300 block">Completed</span>
+            <span className="text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-300 block">{t('orders.completed')}</span>
             <span className="text-xl font-extrabold font-display text-emerald-800 dark:text-emerald-200">{completedCount}</span>
           </div>
           <CheckCircle2 className="w-6 h-6 text-emerald-600" />
@@ -205,7 +203,7 @@ export function OrderManagement() {
 
         <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold uppercase text-red-700 dark:text-red-300 block">Cancelled</span>
+            <span className="text-[10px] font-bold uppercase text-red-700 dark:text-red-300 block">{t('orders.cancelled')}</span>
             <span className="text-xl font-extrabold font-display text-red-800 dark:text-red-200">{cancelledCount}</span>
           </div>
           <XCircle className="w-6 h-6 text-red-600" />
@@ -216,7 +214,7 @@ export function OrderManagement() {
       <div className="p-4 rounded-xl bg-card border border-slate-200 dark:border-slate-800 shadow-subtle space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <Input
-            placeholder="Search order number or customer..."
+            placeholder={t('orders.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             leftIcon={<Search className="w-4 h-4" />}
@@ -229,14 +227,14 @@ export function OrderManagement() {
             onChange={(e) => setStatusFilter(e.target.value as any)}
             className="h-9 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
           >
-            <option value="ACTIVE">Active Orders Only</option>
-            <option value="ALL">All Order Statuses</option>
-            <option value="PENDING">PENDING</option>
-            <option value="CONFIRMED">CONFIRMED</option>
-            <option value="PREPARING">PREPARING</option>
-            <option value="READY">READY</option>
-            <option value="COMPLETED">COMPLETED</option>
-            <option value="CANCELLED">CANCELLED</option>
+            <option value="ACTIVE">{t('orders.activeOrdersOnly')}</option>
+            <option value="ALL">{t('orders.allStatuses')}</option>
+            <option value="PENDING">{t('status.PENDING')}</option>
+            <option value="CONFIRMED">{t('status.CONFIRMED')}</option>
+            <option value="PREPARING">{t('status.PREPARING')}</option>
+            <option value="READY">{t('status.READY')}</option>
+            <option value="COMPLETED">{t('status.COMPLETED')}</option>
+            <option value="CANCELLED">{t('status.CANCELLED')}</option>
           </select>
 
           {/* Order Type Filter */}
@@ -245,10 +243,10 @@ export function OrderManagement() {
             onChange={(e) => setTypeFilter(e.target.value as any)}
             className="h-9 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
           >
-            <option value="ALL">All Order Types</option>
-            <option value="TAKEAWAY">Takeaway</option>
-            <option value="DINE_IN">Dine-In</option>
-            <option value="DELIVERY">Delivery</option>
+            <option value="ALL">{t('orders.allTypes')}</option>
+            <option value="TAKEAWAY">{t('orderType.TAKEAWAY')}</option>
+            <option value="DINE_IN">{t('orderType.DINE_IN')}</option>
+            <option value="DELIVERY">{t('orderType.DELIVERY')}</option>
           </select>
 
           {/* Payment Status Filter */}
@@ -257,9 +255,9 @@ export function OrderManagement() {
             onChange={(e) => setPaymentFilter(e.target.value as any)}
             className="h-9 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
           >
-            <option value="ALL">All Payment Statuses</option>
-            <option value="PAID">PAID</option>
-            <option value="REFUNDED">REFUNDED</option>
+            <option value="ALL">{t('orders.allPayments')}</option>
+            <option value="PAID">{t('status.PAID')}</option>
+            <option value="REFUNDED">{t('status.REFUNDED')}</option>
           </select>
         </div>
       </div>
@@ -280,10 +278,10 @@ export function OrderManagement() {
             <Receipt className="w-6 h-6" />
           </div>
           <h4 className="font-display text-base font-bold text-slate-800 dark:text-slate-200">
-            No Orders Found
+            {t('orders.noOrders')}
           </h4>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            No restaurant orders match your current filter parameters.
+            {t('orders.noOrdersDesc')}
           </p>
         </div>
       )}

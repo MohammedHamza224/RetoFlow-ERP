@@ -22,8 +22,9 @@ import { ProductCard } from './ProductCard';
 import { ProductFormModal } from './ProductFormModal';
 
 export function ProductManagement() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const isRtl = i18n.language === 'ar';
   const isManagerOrAdmin = user?.role_name === 'ADMIN' || user?.role_name === 'MANAGER';
 
   // Instant Synchronous Cache Initialization for 0ms Instant Render
@@ -66,7 +67,6 @@ export function ProductManagement() {
   }, []);
 
   useEffect(() => {
-    // If no cache was present, show skeleton, otherwise fetch silently in background
     loadData(!cachedProds || cachedProds.length === 0);
   }, [cachedProds, loadData]);
 
@@ -79,37 +79,39 @@ export function ProductManagement() {
     try {
       let finalImageUrl = formData.image_url;
 
-      // 1. If an image file was selected, upload it
       if (imageFile) {
         finalImageUrl = await DatabaseService.uploadProductImage(imageFile);
-      } 
-      // 2. If the user cleared the image (and didn't select a new one), we should delete the old one
-      else if (editingProduct && editingProduct.image_url && !formData.image_url) {
-        // The user explicitly removed the image
-        // Wait to delete it until AFTER the database update succeeds
       }
 
       const payload = { ...formData, image_url: finalImageUrl };
 
       if (editingProduct) {
         const updated = await DatabaseService.updateProduct(user?.id, editingProduct.id, payload);
-        
-        // If image was removed or replaced, delete the old image from storage
         if (editingProduct.image_url && editingProduct.image_url !== finalImageUrl) {
           await DatabaseService.deleteProductImage(editingProduct.image_url);
         }
-
         setProducts(prev => prev.map(p => p.id === editingProduct.id ? updated : p));
       } else {
         const created = await DatabaseService.createProduct(user?.id, payload);
-        setProducts(prev => [...prev, created]);
+        setProducts(prev => [created, ...prev]);
       }
 
-      // Close the modal upon success
       setIsModalOpen(false);
+      setEditingProduct(null);
     } catch (err: any) {
-      console.error('Failed to save product:', err);
-      throw err; // Re-throw to be handled by the form modal
+      alert(err.message || 'Operation failed.');
+    }
+  };
+
+  const handleToggleStatus = async (product: Product) => {
+    if (!isManagerOrAdmin) return;
+    try {
+      const updated = await DatabaseService.updateProduct(user?.id, product.id, {
+        is_active: !product.is_active,
+      });
+      setProducts(prev => prev.map(p => p.id === product.id ? updated : p));
+    } catch (err: any) {
+      alert(err.message || 'Failed to update status.');
     }
   };
 
@@ -118,31 +120,12 @@ export function ProductManagement() {
     setIsModalOpen(true);
   }, []);
 
-  // Optimistic Local Status Toggle (0ms UI response)
-  const handleToggleStatus = useCallback(async (prod: Product) => {
-    if (!isManagerOrAdmin) return;
-
-    // 1. Instant local update
-    setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, is_active: !p.is_active } : p));
-
-    // 2. Persist in database asynchronously
-    try {
-      await DatabaseService.toggleProductStatus(user?.id, prod.id);
-    } catch (err: any) {
-      // Rollback on failure
-      setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, is_active: prod.is_active } : p));
-      alert(err.message || 'Failed to toggle product status.');
-    }
-  }, [isManagerOrAdmin, user]);
-
-  // Filtered and Sorted Products
   const filteredProducts = useMemo(() => {
     const term = deferredSearchTerm.toLowerCase().trim();
     return products.filter(p => {
       const matchesSearch = !term ||
         p.name.toLowerCase().includes(term) ||
-        p.sku.toLowerCase().includes(term) ||
-        (p.description && p.description.toLowerCase().includes(term));
+        p.sku.toLowerCase().includes(term);
 
       const matchesCategory = selectedCategory === 'ALL' || p.category_id === selectedCategory;
 
@@ -166,7 +149,6 @@ export function ProductManagement() {
     });
   }, [products, deferredSearchTerm, selectedCategory, statusFilter, stockFilter, sortBy]);
 
-  // Inventory Stock Metrics Counter
   const lowStockCount = useMemo(() => products.filter(p => p.is_active && p.stock_quantity > 0 && p.stock_quantity <= p.minimum_stock).length, [products]);
   const outOfStockCount = useMemo(() => products.filter(p => p.is_active && p.stock_quantity === 0).length, [products]);
 
@@ -177,10 +159,10 @@ export function ProductManagement() {
         <div>
           <h3 className="font-display text-xl font-bold text-resto-charcoal-900 dark:text-slate-100 flex items-center gap-2">
             <UtensilsCrossed className="w-5 h-5 text-resto-terracotta-600" />
-            Restaurant Menu Catalog
+            {t('menu.title')}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage products, pricing, stock levels, and soft deactivation status ({products.length} Products Total)
+            {t('menu.subtitle')} ({products.length} {t('menu.productsTotal')})
           </p>
         </div>
 
@@ -192,7 +174,7 @@ export function ProductManagement() {
               className={`p-1.5 rounded-md transition-colors ${
                 viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-resto-terracotta-600 shadow-sm' : 'text-slate-400'
               }`}
-              title="Grid Card View"
+              title={t('menu.gridView')}
             >
               <Grid className="w-4 h-4" />
             </button>
@@ -201,7 +183,7 @@ export function ProductManagement() {
               className={`p-1.5 rounded-md transition-colors ${
                 viewMode === 'table' ? 'bg-white dark:bg-slate-700 text-resto-terracotta-600 shadow-sm' : 'text-slate-400'
               }`}
-              title="Table List View"
+              title={t('menu.tableView')}
             >
               <List className="w-4 h-4" />
             </button>
@@ -214,7 +196,7 @@ export function ProductManagement() {
               onClick={openCreateModal}
               leftIcon={<Plus className="w-4 h-4" />}
             >
-              Create Product
+              {t('menu.createProduct')}
             </Button>
           )}
         </div>
@@ -224,15 +206,15 @@ export function ProductManagement() {
       {(lowStockCount > 0 || outOfStockCount > 0) && (
         <div className="flex flex-wrap items-center gap-3 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 text-xs">
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-          <span className="font-bold">Inventory Alerts:</span>
+          <span className="font-bold">{t('menu.inventoryAlerts')}</span>
           {lowStockCount > 0 && (
             <span className="bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded font-semibold text-amber-800 dark:text-amber-300">
-              {lowStockCount} Low Stock Items
+              {lowStockCount} {t('menu.lowStockItems')}
             </span>
           )}
           {outOfStockCount > 0 && (
             <span className="bg-red-100 dark:bg-red-900/60 px-2 py-0.5 rounded font-semibold text-red-800 dark:text-red-300">
-              {outOfStockCount} Out of Stock
+              {outOfStockCount} {t('menu.outOfStock')}
             </span>
           )}
         </div>
@@ -243,7 +225,7 @@ export function ProductManagement() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search Input */}
           <Input
-            placeholder="Search name or SKU..."
+            placeholder={t('menu.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             leftIcon={<Search className="w-4 h-4" />}
@@ -256,7 +238,7 @@ export function ProductManagement() {
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="h-9 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
           >
-            <option value="ALL">All Categories ({categories.length})</option>
+            <option value="ALL">{t('menu.allCategories')} ({categories.length})</option>
             {categories.map(c => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -268,10 +250,10 @@ export function ProductManagement() {
             onChange={(e) => setStockFilter(e.target.value as any)}
             className="h-9 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
           >
-            <option value="ALL">All Stock Levels</option>
-            <option value="IN_STOCK">In Stock Only</option>
-            <option value="LOW_STOCK">Low Stock Triggered</option>
-            <option value="OUT_OF_STOCK">Out of Stock</option>
+            <option value="ALL">{t('menu.allStock')}</option>
+            <option value="IN_STOCK">{t('menu.inStock')}</option>
+            <option value="LOW_STOCK">{t('menu.lowStock')}</option>
+            <option value="OUT_OF_STOCK">{t('menu.outOfStock')}</option>
           </select>
 
           {/* Sort By */}
@@ -280,10 +262,10 @@ export function ProductManagement() {
             onChange={(e) => setSortBy(e.target.value as any)}
             className="h-9 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
           >
-            <option value="name">Sort by Name (A-Z)</option>
-            <option value="price">Sort by Price</option>
-            <option value="stock">Sort by Stock Quantity</option>
-            <option value="updated">Sort by Recently Updated</option>
+            <option value="name">{t('menu.sortBy')}: {t('menu.sortName')}</option>
+            <option value="price">{t('menu.sortBy')}: {t('menu.sortPrice')}</option>
+            <option value="stock">{t('menu.sortBy')}: {t('menu.sortStock')}</option>
+            <option value="updated">{t('menu.sortBy')}: {t('menu.sortUpdated')}</option>
           </select>
         </div>
       </div>
@@ -304,11 +286,8 @@ export function ProductManagement() {
             <UtensilsCrossed className="w-6 h-6" />
           </div>
           <h4 className="font-display text-base font-bold text-slate-800 dark:text-slate-200">
-            No Products Found
+            {t('menu.noProducts')}
           </h4>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            No items match your search term or active filter preferences.
-          </p>
         </div>
       )}
 
@@ -331,17 +310,17 @@ export function ProductManagement() {
       {!isLoading && viewMode === 'table' && filteredProducts.length > 0 && (
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-card overflow-hidden shadow-subtle">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
+            <table className="w-full text-xs text-start">
               <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold uppercase tracking-wider">
                 <tr>
-                  <th className="p-3.5">Product Name</th>
-                  <th className="p-3.5">SKU</th>
-                  <th className="p-3.5">Category</th>
-                  <th className="p-3.5">Price</th>
-                  {isManagerOrAdmin && <th className="p-3.5">Cost</th>}
-                  <th className="p-3.5">Stock</th>
-                  <th className="p-3.5">Status</th>
-                  {isManagerOrAdmin && <th className="p-3.5 text-right">Actions</th>}
+                  <th className="p-3.5 text-start">{t('inventory.product')}</th>
+                  <th className="p-3.5 text-start">{t('inventory.sku')}</th>
+                  <th className="p-3.5 text-start">{isRtl ? 'التصنيف' : 'Category'}</th>
+                  <th className="p-3.5 text-start">{t('inventory.sellPrice')}</th>
+                  {isManagerOrAdmin && <th className="p-3.5 text-start">{t('inventory.costPrice')}</th>}
+                  <th className="p-3.5 text-start">{t('inventory.currentStock')}</th>
+                  <th className="p-3.5 text-start">{t('inventory.status')}</th>
+                  {isManagerOrAdmin && <th className="p-3.5 text-end">{t('inventory.actions')}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -351,21 +330,21 @@ export function ProductManagement() {
                       {p.name}
                     </td>
                     <td className="p-3.5 font-mono text-slate-500">{p.sku}</td>
-                    <td className="p-3.5">{p.category?.name || 'Unassigned'}</td>
+                    <td className="p-3.5">{p.category?.name || (isRtl ? 'غير مصنف' : 'Unassigned')}</td>
                     <td className="p-3.5 font-bold text-resto-terracotta-600">{formatCurrency(p.price)}</td>
                     {isManagerOrAdmin && <td className="p-3.5 text-slate-500">{formatCurrency(p.cost)}</td>}
                     <td className="p-3.5 font-semibold">
-                      {p.stock_quantity} <span className="text-[10px] text-slate-400 font-normal">(Min: {p.minimum_stock})</span>
+                      {p.stock_quantity} <span className="text-[10px] text-slate-400 font-normal">({t('inventory.minStock')}: {p.minimum_stock})</span>
                     </td>
                     <td className="p-3.5">
                       <Badge variant={p.is_active ? 'success' : 'outline'}>
-                        {p.is_active ? 'Active' : 'Inactive'}
+                        {p.is_active ? t('menu.active') : t('menu.inactive')}
                       </Badge>
                     </td>
                     {isManagerOrAdmin && (
-                      <td className="p-3.5 text-right space-x-2">
+                      <td className="p-3.5 text-end space-x-2">
                         <Button variant="ghost" size="sm" onClick={() => openEditModal(p)} leftIcon={<Edit2 className="w-3.5 h-3.5" />}>
-                          Edit
+                          {t('common.edit')}
                         </Button>
                         <Button
                           variant={p.is_active ? 'outline' : 'secondary'}
@@ -374,7 +353,7 @@ export function ProductManagement() {
                           leftIcon={<Power className="w-3.5 h-3.5" />}
                           className={p.is_active ? 'text-amber-600' : 'text-emerald-600'}
                         >
-                          {p.is_active ? 'Deactivate' : 'Reactivate'}
+                          {p.is_active ? (isRtl ? 'تعطيل' : 'Deactivate') : (isRtl ? 'تفعيل' : 'Reactivate')}
                         </Button>
                       </td>
                     )}
@@ -386,10 +365,13 @@ export function ProductManagement() {
         </div>
       )}
 
-      {/* Product Form Modal */}
+      {/* Form Modal */}
       <ProductFormModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingProduct(null);
+        }}
         onSubmit={handleFormSubmit}
         categories={categories}
         editingProduct={editingProduct}

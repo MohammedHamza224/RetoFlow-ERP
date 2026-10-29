@@ -16,14 +16,13 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { DEFAULT_VAT_RATE, DEFAULT_CURRENCY } from '@/config/tax.config';
+import { DEFAULT_VAT_RATE } from '@/config/tax.config';
+import { SUPPORTED_CURRENCIES, getActiveCurrency, setActiveCurrency, SETTINGS_STORAGE_KEY } from '@/lib/currency';
 import { setAppLanguage } from '@/i18n/i18n';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
-
-const SETTINGS_STORAGE_KEY = 'restoflow_system_settings_v1';
 
 export interface SystemSettingsState {
   restaurantName: string;
@@ -42,12 +41,16 @@ export function SettingsManagement() {
   const isRtl = i18n.language === 'ar';
   const isAdmin = user?.role_name === 'ADMIN';
 
-  // Initial State Sourced from Storage or Centralized Tax Config
+  // Initial State Sourced from Storage or Centralized Currency/Tax Config
   const [formData, setFormData] = useState<SystemSettingsState>(() => {
     try {
       const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          currency: parsed.currency || getActiveCurrency(),
+        };
       }
     } catch (e) {
       console.warn('[SettingsManagement] Local storage parse fallback.');
@@ -59,7 +62,7 @@ export function SettingsManagement() {
       vatNumber: '300123456700003',
       address: 'King Fahd Road, Olaya District, Riyadh, KSA',
       vatRate: DEFAULT_VAT_RATE,
-      currency: DEFAULT_CURRENCY,
+      currency: getActiveCurrency(),
       language: (i18n.language as 'en' | 'ar') || 'en',
     };
   });
@@ -87,10 +90,13 @@ export function SettingsManagement() {
     setIsSubmitting(true);
 
     try {
-      // 1. Save locally in localStorage for persistent UI state
+      // 1. Save and synchronize active business currency
+      setActiveCurrency(formData.currency);
+
+      // 2. Save locally in localStorage for persistent UI state
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(formData));
 
-      // 2. Synchronize language if changed
+      // 3. Synchronize language if changed
       if (formData.language !== i18n.language) {
         setAppLanguage(formData.language);
       }
@@ -182,7 +188,7 @@ export function SettingsManagement() {
                   value={formData.restaurantName}
                   onChange={(e) => handleInputChange('restaurantName', e.target.value)}
                   leftIcon={<Building2 className="w-4 h-4" />}
-                  placeholder="e.g. RestoFlow Fine Dining"
+                  placeholder={isRtl ? 'مثال: مطعم ريستوفلو الفاخر' : 'e.g. RestoFlow Fine Dining'}
                 />
               </div>
 
@@ -194,7 +200,7 @@ export function SettingsManagement() {
                   value={formData.tagline}
                   onChange={(e) => handleInputChange('tagline', e.target.value)}
                   leftIcon={<FileText className="w-4 h-4" />}
-                  placeholder="e.g. Premium Restaurant Management"
+                  placeholder={isRtl ? 'مثال: أرقى تجربة ضيافة وإدارة مطاعم' : 'e.g. Premium Restaurant Management'}
                 />
               </div>
 
@@ -218,7 +224,7 @@ export function SettingsManagement() {
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
                   leftIcon={<MapPin className="w-4 h-4" />}
-                  placeholder="King Fahd Road, Riyadh, KSA"
+                  placeholder={isRtl ? 'طريق الملك فهد، الرياض، المملكة العربية السعودية' : 'King Fahd Road, Riyadh, KSA'}
                 />
               </div>
             </div>
@@ -269,15 +275,21 @@ export function SettingsManagement() {
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {isRtl ? 'العملة الأساسية' : 'Default Currency'}
+                  {t('settings.currency')}
                 </label>
-                <Input
+                <select
                   value={formData.currency}
-                  disabled
-                  className="bg-slate-100 dark:bg-slate-800 cursor-not-allowed font-bold"
-                />
+                  onChange={(e) => handleInputChange('currency', e.target.value)}
+                  className="w-full h-10 rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500 cursor-pointer"
+                >
+                  {SUPPORTED_CURRENCIES.map(curr => (
+                    <option key={curr.code} value={curr.code}>
+                      {curr.code} — {isRtl ? curr.nameAr : curr.nameEn} ({isRtl ? curr.symbolAr : curr.symbolEn})
+                    </option>
+                  ))}
+                </select>
                 <span className="text-[10px] text-slate-400 block">
-                  {isRtl ? 'الريال السعودي (SAR)' : 'Saudi Riyal (SAR)'}
+                  {t('settings.currencyHelp')}
                 </span>
               </div>
             </div>

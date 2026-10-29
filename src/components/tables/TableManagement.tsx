@@ -11,8 +11,9 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { TableCard } from './TableCard';
 
 export function TableManagement() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const isRtl = i18n.language === 'ar';
   const isManagerOrAdmin = user?.role_name === 'ADMIN' || user?.role_name === 'MANAGER';
 
   // Instant Synchronous Cache Initialization for 0ms Instant Render
@@ -50,21 +51,21 @@ export function TableManagement() {
   }, []);
 
   useEffect(() => {
-    // If no cache was present, show skeleton, otherwise fetch silently in background
-    loadTables(!cachedTables || cachedTables.length === 0);
-  }, [cachedTables, loadTables]);
+    const cached = DatabaseService.getCachedTablesSync();
+    loadTables(!cached || cached.length === 0);
+  }, [loadTables]);
 
   const openCreateModal = useCallback(() => {
     setEditingTable(null);
     setFormData({
       table_number: `T-0${tables.length + 1}`,
       capacity: 4,
-      location: 'Main Dining',
+      location: isRtl ? 'الصالة الرئيسية' : 'Main Dining',
       status: 'AVAILABLE',
     });
     setFormError('');
     setIsModalOpen(true);
-  }, [tables.length]);
+  }, [tables.length, isRtl]);
 
   const openEditModal = useCallback((tbl: RestaurantTable) => {
     setEditingTable(tbl);
@@ -83,11 +84,11 @@ export function TableManagement() {
     setFormError('');
 
     if (!formData.table_number.trim()) {
-      setFormError('Table number is required.');
+      setFormError(t('tables.tableNumberRequired'));
       return;
     }
     if (formData.capacity < 1) {
-      setFormError('Capacity must be at least 1 guest.');
+      setFormError(t('tables.capacityMin'));
       return;
     }
 
@@ -112,14 +113,11 @@ export function TableManagement() {
   const handleStatusChange = useCallback(async (tbl: RestaurantTable, newStatus: TableStatus) => {
     if (tbl.status === newStatus) return;
 
-    // 1. Instant local update
     setTables(prev => prev.map(t => t.id === tbl.id ? { ...t, status: newStatus } : t));
 
-    // 2. Persist in background asynchronously
     try {
       await DatabaseService.updateTableStatus(user?.id, tbl.id, newStatus);
     } catch (err: any) {
-      // Rollback on error
       setTables(prev => prev.map(t => t.id === tbl.id ? { ...t, status: tbl.status } : t));
       alert(err.message || 'Failed to update table status.');
     }
@@ -150,10 +148,10 @@ export function TableManagement() {
         <div>
           <h3 className="font-display text-xl font-bold text-resto-charcoal-900 dark:text-slate-100 flex items-center gap-2">
             <Grid className="w-5 h-5 text-resto-terracotta-600" />
-            Restaurant Floor Plan & Tables
+            {t('tables.title')}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage table capacities, floor layout, and occupancy status ({tables.length} Total Tables)
+            {t('tables.subtitle')} ({tables.length} {t('tables.title')})
           </p>
         </div>
 
@@ -164,7 +162,7 @@ export function TableManagement() {
             onClick={openCreateModal}
             leftIcon={<Plus className="w-4 h-4" />}
           >
-            Create Table
+            {t('tables.createTable')}
           </Button>
         )}
       </div>
@@ -174,7 +172,7 @@ export function TableManagement() {
         <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-            <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200">Available</span>
+            <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200">{t('tables.available')}</span>
           </div>
           <span className="text-lg font-extrabold text-emerald-700 font-display">{availableCount}</span>
         </div>
@@ -182,7 +180,7 @@ export function TableManagement() {
         <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Clock className="w-5 h-5 text-amber-600" />
-            <span className="text-xs font-bold text-amber-900 dark:text-amber-200">Occupied</span>
+            <span className="text-xs font-bold text-amber-900 dark:text-amber-200">{t('tables.occupied')}</span>
           </div>
           <span className="text-lg font-extrabold text-amber-700 font-display">{occupiedCount}</span>
         </div>
@@ -190,7 +188,7 @@ export function TableManagement() {
         <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CalendarCheck className="w-5 h-5 text-blue-600" />
-            <span className="text-xs font-bold text-blue-900 dark:text-blue-200">Reserved</span>
+            <span className="text-xs font-bold text-blue-900 dark:text-blue-200">{t('tables.reserved')}</span>
           </div>
           <span className="text-lg font-extrabold text-blue-700 font-display">{reservedCount}</span>
         </div>
@@ -200,7 +198,7 @@ export function TableManagement() {
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-card border border-slate-200 dark:border-slate-800 shadow-subtle">
         <div className="w-full md:w-80">
           <Input
-            placeholder="Search table number or location..."
+            placeholder={t('tables.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             leftIcon={<Search className="w-4 h-4" />}
@@ -209,20 +207,23 @@ export function TableManagement() {
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="text-xs font-semibold text-slate-500">Status:</span>
-          {(['ALL', 'AVAILABLE', 'OCCUPIED', 'RESERVED'] as const).map(s => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
-                statusFilter === s
-                  ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
-              }`}
-            >
-              {s}
-            </button>
-          ))}
+          <span className="text-xs font-semibold text-slate-500">{t('tables.status')}:</span>
+          {(['ALL', 'AVAILABLE', 'OCCUPIED', 'RESERVED'] as const).map(s => {
+            const label = s === 'ALL' ? t('tables.all') : t(`status.${s}`);
+            return (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                  statusFilter === s
+                    ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -242,10 +243,10 @@ export function TableManagement() {
             <Grid className="w-6 h-6" />
           </div>
           <h4 className="font-display text-base font-bold text-slate-800 dark:text-slate-200">
-            No Tables Found
+            {t('tables.noTables')}
           </h4>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            No tables match your current floor plan filter or search query.
+            {t('tables.noTablesDesc')}
           </p>
         </div>
       )}
@@ -269,8 +270,8 @@ export function TableManagement() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingTable ? 'Edit Restaurant Table' : 'Create New Table'}
-        description="Set table numbers, seating capacity, and floor plan dining location."
+        title={editingTable ? t('tables.editModalTitle') : t('tables.createModalTitle')}
+        description={t('tables.modalDesc')}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
@@ -282,7 +283,7 @@ export function TableManagement() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Table Number *</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('tables.tableNumber')} *</label>
               <Input
                 value={formData.table_number}
                 onChange={(e) => setFormData({ ...formData, table_number: e.target.value.toUpperCase() })}
@@ -292,7 +293,7 @@ export function TableManagement() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Seating Capacity *</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('tables.capacity')} *</label>
               <Input
                 type="number"
                 min="1"
@@ -306,36 +307,36 @@ export function TableManagement() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Floor Location</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('tables.location')}</label>
               <Input
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                placeholder="e.g. Main Dining, Patio, VIP Lounge"
+                placeholder={isRtl ? 'مثال: الصالة الرئيسية، التراس، قسم كبار الشخصيات' : 'e.g. Main Dining, Patio, VIP Lounge'}
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Initial Status *</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('tables.status')} *</label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as TableStatus })}
                 className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
                 required
               >
-                <option value="AVAILABLE">AVAILABLE - Table Ready</option>
-                <option value="OCCUPIED">OCCUPIED - Guests Seated</option>
-                <option value="RESERVED">RESERVED - Upcoming Reservation</option>
+                <option value="AVAILABLE">{t('status.AVAILABLE')}</option>
+                <option value="OCCUPIED">{t('status.OCCUPIED')}</option>
+                <option value="RESERVED">{t('status.RESERVED')}</option>
               </select>
             </div>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
             <Button variant="ghost" size="md" type="button" onClick={() => setIsModalOpen(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
 
             <Button variant="primary" size="md" type="submit" isLoading={isSubmitting}>
-              {editingTable ? 'Save Table' : 'Create Table'}
+              {t('tables.saveTable')}
             </Button>
           </div>
         </form>

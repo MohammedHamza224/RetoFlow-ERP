@@ -62,30 +62,30 @@ export const PrintableReceipt = React.forwardRef<HTMLDivElement, PrintableReceip
             <ChefHat className="w-5 h-5 text-black" />
             <span className="text-base font-bold tracking-wider">RESTOFLOW</span>
           </div>
-          <p className="text-[10px]">Tax Invoice / فاتورة ضريبية مبسطة</p>
-          <p className="text-[10px]">VAT Reg No: 310123456700003</p>
+          <p className="text-[10px]">{t('receipt.title')}</p>
+          <p className="text-[10px]">{t('receipt.vatReg')}</p>
         </div>
 
         {/* Order Details */}
         <div className="py-2.5 border-b border-dashed border-black space-y-1 text-[11px]">
           <div className="flex justify-between font-bold text-sm">
-            <span>Order #:</span>
+            <span>{t('receipt.orderNo')}</span>
             <span>{orderNumber}</span>
           </div>
           <div className="flex justify-between">
-            <span>Date:</span>
+            <span>{t('receipt.date')}</span>
             <span>{new Date(createdAt).toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
-            <span>Cashier:</span>
+            <span>{t('receipt.cashier')}</span>
             <span>{cashierName}</span>
           </div>
           <div className="flex justify-between">
-            <span>Customer:</span>
+            <span>{t('receipt.customer')}</span>
             <span>{customerName}</span>
           </div>
           <div className="flex justify-between">
-            <span>Type:</span>
+            <span>{t('receipt.type')}</span>
             <span>{orderType} {tableName ? `(${tableName})` : ''}</span>
           </div>
         </div>
@@ -93,9 +93,9 @@ export const PrintableReceipt = React.forwardRef<HTMLDivElement, PrintableReceip
         {/* Items Table */}
         <div className="py-2 border-b border-dashed border-black">
           <div className="flex justify-between font-bold border-b border-black pb-1 mb-1">
-            <span className="w-1/2">Item</span>
-            <span className="w-1/6 text-center">Qty</span>
-            <span className="w-1/3 text-right">Total</span>
+            <span className="w-1/2">{t('receipt.item')}</span>
+            <span className="w-1/6 text-center">{t('receipt.qty')}</span>
+            <span className="w-1/3 text-right">{t('receipt.total')}</span>
           </div>
           {items.map((item, idx) => (
             <div key={idx} className="flex justify-between py-0.5">
@@ -109,28 +109,28 @@ export const PrintableReceipt = React.forwardRef<HTMLDivElement, PrintableReceip
         {/* Totals */}
         <div className="py-2 border-b border-dashed border-black space-y-1 text-[11px]">
           <div className="flex justify-between">
-            <span>Subtotal:</span>
+            <span>{t('receipt.subtotal')}</span>
             <span>{formatCurrency(subtotal)}</span>
           </div>
           {discount > 0 && (
             <div className="flex justify-between font-semibold text-red-600">
-              <span>Discount:</span>
+              <span>{t('receipt.discount')}</span>
               <span>-{formatCurrency(discount)}</span>
             </div>
           )}
           <div className="flex justify-between">
-            <span>VAT (15%):</span>
+            <span>{t('receipt.vat')}</span>
             <span>{formatCurrency(vatAmount)}</span>
           </div>
           <div className="flex justify-between font-bold text-sm pt-1 border-t border-black">
-            <span>TOTAL:</span>
+            <span>{t('receipt.grandTotal')}</span>
             <span>{formatCurrency(total)}</span>
           </div>
         </div>
 
         {/* Payment Breakdown */}
         <div className="py-2 border-b border-dashed border-black space-y-1 text-[11px]">
-          <span className="font-bold block">Payment Method(s):</span>
+          <span className="font-bold block">{t('receipt.paymentMethods')}</span>
           {payments.map((p, idx) => (
             <div key={idx} className="flex justify-between">
               <span>{p.payment_method}:</span>

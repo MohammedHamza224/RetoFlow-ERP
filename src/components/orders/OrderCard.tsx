@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Eye, ArrowRight } from 'lucide-react';
 import { Order, OrderStatus } from '@/types/database.types';
 import { formatCurrency } from '@/lib/utils';
@@ -19,20 +20,22 @@ export const OrderCard = React.memo(function OrderCard({
   onOpenDetails,
   onAdvanceStatus,
 }: OrderCardProps) {
+  const { t } = useTranslation();
+
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
       case 'PENDING':
-        return <Badge variant="outline" className="bg-slate-100 text-slate-700">PENDING</Badge>;
+        return <Badge variant="outline" className="bg-slate-100 text-slate-700">{t('status.PENDING')}</Badge>;
       case 'CONFIRMED':
-        return <Badge variant="warning" className="bg-amber-500 text-white">CONFIRMED</Badge>;
+        return <Badge variant="warning" className="bg-amber-500 text-white">{t('status.CONFIRMED')}</Badge>;
       case 'PREPARING':
-        return <Badge variant="warning" className="bg-orange-500 text-white">PREPARING</Badge>;
+        return <Badge variant="warning" className="bg-orange-500 text-white">{t('status.PREPARING')}</Badge>;
       case 'READY':
-        return <Badge variant="success" className="bg-emerald-500 text-white">READY</Badge>;
+        return <Badge variant="success" className="bg-emerald-500 text-white">{t('status.READY')}</Badge>;
       case 'COMPLETED':
-        return <Badge variant="success" className="bg-emerald-600 text-white">COMPLETED</Badge>;
+        return <Badge variant="success" className="bg-emerald-600 text-white">{t('status.COMPLETED')}</Badge>;
       case 'CANCELLED':
-        return <Badge variant="destructive" className="bg-red-600 text-white">CANCELLED</Badge>;
+        return <Badge variant="destructive" className="bg-red-600 text-white">{t('status.CANCELLED')}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -50,11 +53,20 @@ export const OrderCard = React.memo(function OrderCard({
 
   const getNextStatusLabel = (status: OrderStatus) => {
     switch (status) {
-      case 'PENDING': return isRtl ? 'تأكيد' : 'Confirm';
-      case 'CONFIRMED': return isRtl ? 'تحضير' : 'Prepare';
-      case 'PREPARING': return isRtl ? 'جاهز' : 'Mark Ready';
-      case 'READY': return isRtl ? 'إكمال' : 'Complete';
+      case 'PENDING': return t('orders.nextStatusConfirm');
+      case 'CONFIRMED': return t('orders.nextStatusPrepare');
+      case 'PREPARING': return t('orders.nextStatusReady');
+      case 'READY': return t('orders.nextStatusComplete');
       default: return null;
+    }
+  };
+
+  const translateOrderType = (type: string) => {
+    switch (type) {
+      case 'DINE_IN': return t('orderType.DINE_IN');
+      case 'TAKEAWAY': return t('orderType.TAKEAWAY');
+      case 'DELIVERY': return t('orderType.DELIVERY');
+      default: return type;
     }
   };
 
@@ -79,26 +91,26 @@ export const OrderCard = React.memo(function OrderCard({
 
       <CardContent className="p-4 pt-1 space-y-2 text-xs">
         <div className="flex justify-between text-slate-600 dark:text-slate-400">
-          <span className="text-slate-400">{isRtl ? 'العميل:' : 'Customer:'}</span>
+          <span className="text-slate-400">{t('orders.customer')}:</span>
           <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">
-            {order.customer?.name || 'Walk-in Guest'}
+            {order.customer?.name || t('pos.walkInGuest')}
           </span>
         </div>
 
         <div className="flex justify-between text-slate-600 dark:text-slate-400">
-          <span className="text-slate-400">{isRtl ? 'النوع والطاولة:' : 'Type & Table:'}</span>
+          <span className="text-slate-400">{t('orders.typeAndTable')}:</span>
           <span className="font-semibold">
-            {order.order_type} {order.table ? `(${order.table.table_number})` : ''}
+            {translateOrderType(order.order_type)} {order.table ? `(${order.table.table_number})` : ''}
           </span>
         </div>
 
         <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-1.5">
             <Badge variant={isRefunded ? 'destructive' : 'success'} className="text-[9px] px-1.5 py-0">
-              {isRefunded ? 'REFUNDED' : 'PAID'}
+              {isRefunded ? t('status.REFUNDED') : t('status.PAID')}
             </Badge>
             <span className="text-[11px] font-semibold text-slate-500 font-mono">
-              ({order.items?.length || 0} items)
+              ({order.items?.length || 0} {t('orders.items')})
             </span>
           </div>
 
@@ -115,7 +127,7 @@ export const OrderCard = React.memo(function OrderCard({
           onClick={() => onOpenDetails(order)}
           leftIcon={<Eye className="w-3.5 h-3.5" />}
         >
-          Details
+          {t('orders.details')}
         </Button>
 
         {nextStatus && order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (

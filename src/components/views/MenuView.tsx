@@ -21,7 +21,7 @@ export function MenuView() {
           }`}
         >
           <UtensilsCrossed className="w-4 h-4" />
-          Products Catalog
+          {t('menu.productsTab')}
         </button>
 
         <button
@@ -33,7 +33,7 @@ export function MenuView() {
           }`}
         >
           <Layers className="w-4 h-4" />
-          Menu Categories
+          {t('menu.categoriesTab')}
         </button>
       </div>
 

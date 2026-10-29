@@ -44,8 +44,8 @@ export function OrderRefundModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isRtl ? `استرداد المبلغ النهائي (${order.order_number})` : `Full Payment Refund (${order.order_number})`}
-      description={isRtl ? 'استرداد كامل المبلغ مدعوم فقط للطلبات المكتملة المدفوعة.' : 'Full refund updates payment status to REFUNDED while preserving original order audit history.'}
+      title={`${t('orders.refundModalTitle')} (${order.order_number})`}
+      description={t('orders.refundModalDesc')}
       maxWidth="sm"
     >
       <form onSubmit={handleSubmit} className="space-y-4 py-2 select-none">
@@ -69,25 +69,23 @@ export function OrderRefundModal({
           </div>
           <div className="flex items-center justify-between text-slate-500 pt-1 border-t border-slate-200 dark:border-slate-800">
             <span>{isRtl ? 'نوع العملية:' : 'Refund Scope:'}</span>
-            <span className="font-bold text-amber-600">FULL REFUND ONLY</span>
+            <span className="font-bold text-amber-600">{isRtl ? 'استرداد كامل فقط' : 'FULL REFUND ONLY'}</span>
           </div>
         </div>
 
         <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-blue-900 dark:text-blue-200 text-xs space-y-1">
           <div className="flex items-center gap-1.5 font-bold">
             <Receipt className="w-4 h-4 text-blue-600 shrink-0" />
-            <span>{isRtl ? 'تنبيه الحفظ المالي:' : 'Audit Preservation Policy:'}</span>
+            <span>{t('orders.refundWarning')}</span>
           </div>
           <p className="text-[11px] text-blue-800 dark:text-blue-300">
-            {isRtl
-              ? 'سيتم تغيير حالة الدفع إلى "مسترد". سيظل سجل الطلب الأصلي والتكلفة التاريخية كما هما لأغراض المراجعة.'
-              : 'Payment status will change to REFUNDED. Order details and historical snapshot costs will remain preserved for audit.'}
+            {t('orders.refundWarningMsg')}
           </p>
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <Button variant="ghost" size="md" type="button" onClick={onClose}>
-            {isRtl ? 'إلغاء' : 'Cancel'}
+            {t('common.cancel')}
           </Button>
 
           <Button
@@ -99,7 +97,7 @@ export function OrderRefundModal({
             leftIcon={<RefreshCw className="w-4 h-4" />}
             className="font-bold bg-resto-terracotta-600 hover:bg-resto-terracotta-500 text-white"
           >
-            {isSubmitting ? (isRtl ? 'جاري الاسترداد...' : 'Refunding...') : (isRtl ? 'تأكيد الاسترداد المالي' : 'Confirm Full Refund')}
+            {isSubmitting ? t('common.loading') : t('orders.confirmRefundBtn')}
           </Button>
         </div>
       </form>

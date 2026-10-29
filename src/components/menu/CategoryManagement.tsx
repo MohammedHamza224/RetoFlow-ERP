@@ -12,7 +12,8 @@ import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
 
 export function CategoryManagement() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.language === 'ar';
   const { user } = useAuth();
   const isManagerOrAdmin = user?.role_name === 'ADMIN' || user?.role_name === 'MANAGER';
 
@@ -59,8 +60,9 @@ export function CategoryManagement() {
 
   useEffect(() => {
     // If no cache was present, show skeleton, otherwise fetch silently in background
-    loadData(!cachedCats || cachedCats.length === 0);
-  }, [cachedCats, loadData]);
+    const cached = DatabaseService.getCachedCategoriesSync();
+    loadData(!cached || cached.length === 0);
+  }, [loadData]);
 
   // Memoized product count map by category ID
   const productCountMap = useMemo(() => {
@@ -97,7 +99,7 @@ export function CategoryManagement() {
     setFormError('');
 
     if (!formData.name.trim()) {
-      setFormError('Category name is required.');
+      setFormError(t('menu.categoryNameRequired'));
       return;
     }
 
@@ -112,7 +114,7 @@ export function CategoryManagement() {
       }
       setIsModalOpen(false);
     } catch (err: any) {
-      setFormError(err.message || 'Operation failed.');
+      setFormError(err.message || (isRtl ? 'فشلت العملية.' : 'Operation failed.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -131,9 +133,9 @@ export function CategoryManagement() {
     } catch (err: any) {
       // Rollback on failure
       setCategories(prev => prev.map(c => c.id === cat.id ? { ...c, is_active: cat.is_active } : c));
-      alert(err.message || 'Failed to toggle category status.');
+      alert(err.message || (isRtl ? 'فشل تبديل حالة التصنيف.' : 'Failed to toggle category status.'));
     }
-  }, [isManagerOrAdmin, user]);
+  }, [isManagerOrAdmin, user, isRtl]);
 
   // Filtered categories
   const filteredCategories = useMemo(() => {
@@ -159,10 +161,10 @@ export function CategoryManagement() {
         <div>
           <h3 className="font-display text-xl font-bold text-resto-charcoal-900 dark:text-slate-100 flex items-center gap-2">
             <Layers className="w-5 h-5 text-resto-terracotta-600" />
-            Menu Categories
+            {t('menu.categoriesTitle')}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Organize restaurant products into menu categories ({categories.length} Total)
+            {t('menu.categoriesSubtitle')} ({categories.length} {t('menu.productsTotal')})
           </p>
         </div>
 
@@ -173,7 +175,7 @@ export function CategoryManagement() {
             onClick={openCreateModal}
             leftIcon={<Plus className="w-4 h-4" />}
           >
-            Create Category
+            {t('menu.createCategory')}
           </Button>
         )}
       </div>
@@ -182,7 +184,7 @@ export function CategoryManagement() {
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-card border border-slate-200 dark:border-slate-800 shadow-subtle">
         <div className="w-full md:w-80">
           <Input
-            placeholder="Search categories by name..."
+            placeholder={t('menu.searchCategories')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             leftIcon={<Search className="w-4 h-4" />}
@@ -191,7 +193,7 @@ export function CategoryManagement() {
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="text-xs font-semibold text-slate-500">Filter:</span>
+          <span className="text-xs font-semibold text-slate-500">{t('common.filter')}:</span>
           {(['ALL', 'ACTIVE', 'INACTIVE'] as const).map(status => (
             <button
               key={status}
@@ -202,7 +204,7 @@ export function CategoryManagement() {
                   : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
               }`}
             >
-              {status}
+              {status === 'ALL' ? t('common.all') : (status === 'ACTIVE' ? t('common.active') : t('common.inactive'))}
             </button>
           ))}
         </div>
@@ -224,12 +226,12 @@ export function CategoryManagement() {
             <Layers className="w-6 h-6" />
           </div>
           <h4 className="font-display text-base font-bold text-slate-800 dark:text-slate-200">
-            No Categories Found
+            {t('menu.noCategories')}
           </h4>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
             {searchTerm || statusFilter !== 'ALL'
-              ? 'No categories match your current search query or filter selection.'
-              : 'Start by adding menu categories to structure your restaurant catalog.'}
+              ? t('menu.noCategoriesDesc')
+              : (isRtl ? 'ابدأ بإضافة تصنيفات القائمة لتنظيم أصناف المطعم.' : 'Start by adding menu categories to structure your restaurant catalog.')}
           </p>
         </div>
       )}
@@ -251,7 +253,7 @@ export function CategoryManagement() {
                     <div className="flex items-center gap-2">
                       <CardTitle className="text-base truncate">{cat.name}</CardTitle>
                       <Badge variant={cat.is_active ? 'success' : 'outline'} className="text-[10px] shrink-0">
-                        {cat.is_active ? 'Active' : 'Inactive'}
+                        {cat.is_active ? t('common.active') : t('common.inactive')}
                       </Badge>
                     </div>
                     {cat.description && (
@@ -265,10 +267,10 @@ export function CategoryManagement() {
                 <CardContent className="pb-3">
                   <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-100/70 dark:bg-slate-800/60 text-xs text-slate-600 dark:text-slate-300">
                     <Package className="w-4 h-4 text-resto-terracotta-600 shrink-0" />
-                    <span className="font-semibold">{count} Products</span>
+                    <span className="font-semibold">{count} {t('menu.productsCount')}</span>
                     <span className="text-slate-400">&bull;</span>
                     <span className="text-slate-500 truncate">
-                      {count > 0 ? 'Assigned' : 'Empty'}
+                      {count > 0 ? t('menu.assigned') : t('menu.empty')}
                     </span>
                   </div>
                 </CardContent>
@@ -281,7 +283,7 @@ export function CategoryManagement() {
                       onClick={() => openEditModal(cat)}
                       leftIcon={<Edit2 className="w-3.5 h-3.5" />}
                     >
-                      Edit
+                      {t('common.edit')}
                     </Button>
 
                     <Button
@@ -291,7 +293,7 @@ export function CategoryManagement() {
                       leftIcon={<Power className="w-3.5 h-3.5" />}
                       className={cat.is_active ? 'text-amber-600 hover:text-amber-700' : 'text-emerald-600'}
                     >
-                      {cat.is_active ? 'Deactivate' : 'Reactivate'}
+                      {cat.is_active ? t('menu.deactivate') : t('menu.reactivate')}
                     </Button>
                   </CardFooter>
                 )}
@@ -305,8 +307,8 @@ export function CategoryManagement() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingCategory ? 'Edit Category' : 'Create New Category'}
-        description="Categories organize menu items for POS display and inventory tracking."
+        title={editingCategory ? t('menu.editCategory') : t('menu.createCategory')}
+        description={isRtl ? 'تنظيم أصناف القائمة لشاشة نقطة البيع وتتبع المخزون.' : 'Categories organize menu items for POS display and inventory tracking.'}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
@@ -317,28 +319,28 @@ export function CategoryManagement() {
           )}
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Category Name *</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('menu.categoryName')} *</label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g. Burgers, Pizza, Drinks"
+              placeholder={isRtl ? 'مثال: برجر، بيتزا، مشروبات' : 'e.g. Burgers, Pizza, Drinks'}
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Description</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('menu.categoryDescription')}</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Optional category description..."
+              placeholder={isRtl ? 'وصف اختياري للتصنيف...' : 'Optional category description...'}
               className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
               rows={3}
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Image URL</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('menu.categoryImageUrl')}</label>
             <Input
               value={formData.image_url}
               onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
@@ -354,17 +356,17 @@ export function CategoryManagement() {
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                 className="rounded border-slate-300 text-resto-terracotta-600 focus:ring-resto-terracotta-500"
               />
-              <span>Active Category (Visible in POS and product creation)</span>
+              <span>{t('menu.categoryActiveLabel')}</span>
             </label>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
             <Button variant="ghost" size="md" type="button" onClick={() => setIsModalOpen(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
 
             <Button variant="primary" size="md" type="submit" isLoading={isSubmitting}>
-              {editingCategory ? 'Save Category' : 'Create Category'}
+              {t('menu.saveCategory')}
             </Button>
           </div>
         </form>

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ShoppingCart, Trash2, Plus, Minus, Tag } from 'lucide-react';
 import { Product } from '@/types/database.types';
 import { formatCurrency } from '@/lib/utils';
+import { getActiveCurrency } from '@/lib/currency';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { calculateOrderTotals, DEFAULT_VAT_RATE } from '@/config/tax.config';
@@ -131,7 +132,7 @@ export const CartPanel = React.memo(function CartPanel({
           <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
             <span className="text-slate-500 font-medium flex items-center gap-1">
               <Tag className="w-3.5 h-3.5 text-resto-terracotta-600" />
-              {t('pos.discount')} (SAR):
+              {t('pos.discount')} ({getActiveCurrency()}):
             </span>
             <div className="w-24">
               <Input

@@ -57,12 +57,12 @@ export function OrderDetailsModal({
   const isCancelled = order.status === 'CANCELLED';
 
   // Lifecycle progression sequence
-  const lifecycleSteps: Array<{ key: OrderStatus; labelEn: string; labelAr: string }> = [
-    { key: 'PENDING', labelEn: 'Pending', labelAr: 'قيد الانتظار' },
-    { key: 'CONFIRMED', labelEn: 'Confirmed', labelAr: 'مؤكد' },
-    { key: 'PREPARING', labelEn: 'Preparing', labelAr: 'جاري التحضير' },
-    { key: 'READY', labelEn: 'Ready', labelAr: 'جاهز' },
-    { key: 'COMPLETED', labelEn: 'Completed', labelAr: 'مكتمل' },
+  const lifecycleSteps: Array<{ key: OrderStatus; label: string }> = [
+    { key: 'PENDING', label: t('status.PENDING') },
+    { key: 'CONFIRMED', label: t('status.CONFIRMED') },
+    { key: 'PREPARING', label: t('status.PREPARING') },
+    { key: 'READY', label: t('status.READY') },
+    { key: 'COMPLETED', label: t('status.COMPLETED') },
   ];
 
   const getNextStatus = (status: OrderStatus): OrderStatus | null => {
@@ -83,15 +83,41 @@ export function OrderDetailsModal({
   const getNextStatusLabel = (nextStatus: OrderStatus) => {
     switch (nextStatus) {
       case 'CONFIRMED':
-        return isRtl ? 'تأكيد الطلب' : 'Confirm Order';
+        return t('orders.nextStatusConfirm');
       case 'PREPARING':
-        return isRtl ? 'بدء التحضير' : 'Start Preparing';
+        return t('orders.nextStatusPrepare');
       case 'READY':
-        return isRtl ? 'جاهز للتقديم' : 'Mark Ready';
+        return t('orders.nextStatusReady');
       case 'COMPLETED':
-        return isRtl ? 'إكمال الطلب النهائي' : 'Complete Order';
+        return t('orders.nextStatusComplete');
       default:
         return '';
+    }
+  };
+
+  const translateOrderType = (type: string) => {
+    switch (type) {
+      case 'DINE_IN': return t('orderType.DINE_IN');
+      case 'TAKEAWAY': return t('orderType.TAKEAWAY');
+      case 'DELIVERY': return t('orderType.DELIVERY');
+      default: return type;
+    }
+  };
+
+  const translatePaymentMethod = (method: string) => {
+    const key = `paymentMethod.${method}`;
+    const translated = t(key);
+    return translated !== key ? translated : method;
+  };
+
+  const translateCancellationReason = (reason?: string | null) => {
+    if (!reason) return t('orders.reasonOther');
+    switch (reason) {
+      case 'CUSTOMER_REQUEST': return t('orders.reasonCustomer');
+      case 'OUT_OF_STOCK': return t('orders.reasonOutOfStock');
+      case 'DUPLICATE_ORDER': return t('orders.reasonDuplicate');
+      case 'WRONG_ORDER': return t('orders.reasonWrong');
+      default: return t('orders.reasonOther');
     }
   };
 
@@ -116,8 +142,8 @@ export function OrderDetailsModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isRtl ? `تفاصيل الطلب ${order.order_number}` : `Order Details — ${order.order_number}`}
-      description={isRtl ? 'سجل تتبع الطلب والأصناف والمدفوعات' : 'Complete audit breakdown, item snapshot prices, and lifecycle state'}
+      title={`${t('orders.orderDetailsTitle')} — ${order.order_number}`}
+      description={t('orders.orderDetailsDesc')}
       maxWidth="lg"
     >
       <div className="space-y-6 py-2 select-none">
@@ -132,7 +158,7 @@ export function OrderDetailsModal({
         {!isCancelled && (
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
             <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              {isRtl ? 'تتبع دورة حياة الطلب' : 'Order Lifecycle Progression'}
+              {t('orders.lifecycleProgression')}
             </h5>
             <div className="grid grid-cols-5 gap-1.5 text-center">
               {lifecycleSteps.map((step, idx) => {
@@ -159,7 +185,7 @@ export function OrderDetailsModal({
                           : 'text-slate-400'
                       }`}
                     >
-                      {isRtl ? step.labelAr : step.labelEn}
+                      {step.label}
                     </span>
                   </div>
                 );
@@ -173,15 +199,15 @@ export function OrderDetailsModal({
             <div className="flex items-center gap-2">
               <XCircle className="w-5 h-5 text-red-600 shrink-0" />
               <div>
-                <span className="font-bold block">{isRtl ? 'طلب ملغى' : 'Order Cancelled'}</span>
+                <span className="font-bold block">{t('orders.orderCancelled')}</span>
                 <span className="text-[11px] text-red-700 dark:text-red-300">
-                  {isRtl ? 'السبب:' : 'Reason:'} {order.cancellation_reason || 'OTHER'}
+                  {t('orders.reason')}: {translateCancellationReason(order.cancellation_reason)}
                 </span>
               </div>
             </div>
             {order.cancelled_at && (
               <span className="text-[10px] font-mono text-slate-500">
-                {new Date(order.cancelled_at).toLocaleString()}
+                {new Date(order.cancelled_at).toLocaleString(isRtl ? 'ar-SA' : 'en-US')}
               </span>
             )}
           </div>
@@ -190,30 +216,30 @@ export function OrderDetailsModal({
         {/* 2. Order Metadata Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl bg-card border border-slate-200 dark:border-slate-800 text-xs">
           <div>
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">{isRtl ? 'العميل' : 'Customer'}</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-semibold">{t('orders.customer')}</span>
             <span className="font-bold text-slate-800 dark:text-slate-100 truncate block">
-              {order.customer?.name || 'Walk-in Guest'}
+              {order.customer?.name || t('pos.walkInGuest')}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">{isRtl ? 'نوع الطلب' : 'Order Type'}</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-semibold">{t('orders.orderType')}</span>
             <Badge variant="outline" className="text-[10px] mt-0.5">
-              {order.order_type}
+              {translateOrderType(order.order_type)}
             </Badge>
           </div>
 
           <div>
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">{isRtl ? 'الطاولة' : 'Table'}</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-semibold">{t('orders.table')}</span>
             <span className="font-bold text-slate-800 dark:text-slate-100 block">
-              {order.table?.table_number || 'N/A'}
+              {order.table?.table_number || (isRtl ? 'غير محدد' : 'N/A')}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">{isRtl ? 'تاريخ الإنشاء' : 'Created Date'}</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-semibold">{t('orders.createdDate')}</span>
             <span className="font-mono text-slate-600 dark:text-slate-400 text-[11px] block">
-              {new Date(order.created_at).toLocaleString()}
+              {new Date(order.created_at).toLocaleString(isRtl ? 'ar-SA' : 'en-US')}
             </span>
           </div>
         </div>
@@ -221,37 +247,37 @@ export function OrderDetailsModal({
         {/* 3. Items Snapshot Table */}
         <div className="space-y-2">
           <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            {isRtl ? 'أصناف الطلب' : 'Order Line Items'} ({order.items?.length || 0})
+            {t('orders.lineItems')} ({order.items?.length || 0})
           </h5>
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden text-xs">
-            <table className="w-full text-left">
+            <table className="w-full text-start">
               <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold uppercase text-[10px]">
                 <tr>
-                  <th className="p-2.5">Item Name</th>
-                  <th className="p-2.5">SKU</th>
-                  <th className="p-2.5 text-center">Qty</th>
-                  <th className="p-2.5 text-right">Unit Price</th>
-                  {currentUserRole === 'ADMIN' && <th className="p-2.5 text-right text-slate-400">Unit Cost</th>}
-                  <th className="p-2.5 text-right">Total</th>
+                  <th className="p-2.5 text-start">{t('orders.itemName')}</th>
+                  <th className="p-2.5 text-start">{t('orders.sku')}</th>
+                  <th className="p-2.5 text-center">{t('orders.qty')}</th>
+                  <th className="p-2.5 text-end">{t('orders.unitPrice')}</th>
+                  {currentUserRole === 'ADMIN' && <th className="p-2.5 text-end text-slate-400">{t('orders.unitCost')}</th>}
+                  <th className="p-2.5 text-end">{t('orders.total')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {order.items?.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
                     <td className="p-2.5 font-bold text-slate-800 dark:text-slate-100">
-                      {item.product?.name || 'Product'}
+                      {item.product?.name || t('inventory.product')}
                     </td>
                     <td className="p-2.5 font-mono text-slate-400 text-[10px]">
                       {item.product?.sku || 'SKU'}
                     </td>
                     <td className="p-2.5 text-center font-bold">{item.quantity}</td>
-                    <td className="p-2.5 text-right font-semibold">{formatCurrency(item.unit_price)}</td>
+                    <td className="p-2.5 text-end font-semibold">{formatCurrency(item.unit_price)}</td>
                     {currentUserRole === 'ADMIN' && (
-                      <td className="p-2.5 text-right font-mono text-slate-400 text-[11px]">
+                      <td className="p-2.5 text-end font-mono text-slate-400 text-[11px]">
                         {formatCurrency(item.unit_cost)}
                       </td>
                     )}
-                    <td className="p-2.5 text-right font-extrabold text-resto-terracotta-600 font-display">
+                    <td className="p-2.5 text-end font-extrabold text-resto-terracotta-600 font-display">
                       {formatCurrency(item.total)}
                     </td>
                   </tr>
@@ -266,17 +292,17 @@ export function OrderDetailsModal({
           {/* Payment Method Breakdown */}
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
             <h5 className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10px]">
-              {isRtl ? 'تفاصيل الدفع' : 'Payment Breakdown'}
+              {t('orders.paymentBreakdown')}
             </h5>
             {order.payments?.map(p => (
               <div key={p.id} className="flex items-center justify-between text-slate-600 dark:text-slate-300">
-                <span className="font-bold">{p.payment_method}</span>
+                <span className="font-bold">{translatePaymentMethod(p.payment_method)}</span>
                 <div className="flex items-center gap-2">
                   <Badge
                     variant={p.status === 'REFUNDED' ? 'destructive' : 'success'}
                     className="text-[9px] px-1.5 py-0"
                   >
-                    {p.status}
+                    {p.status === 'REFUNDED' ? t('status.REFUNDED') : t('status.PAID')}
                   </Badge>
                   <span className="font-extrabold font-display">{formatCurrency(p.amount)}</span>
                 </div>
@@ -287,21 +313,21 @@ export function OrderDetailsModal({
           {/* Financial Summary */}
           <div className="p-3.5 rounded-xl bg-card border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
             <div className="flex justify-between text-slate-500">
-              <span>Subtotal:</span>
+              <span>{t('orders.subtotal')}:</span>
               <span className="font-semibold">{formatCurrency(order.subtotal)}</span>
             </div>
             {order.discount > 0 && (
               <div className="flex justify-between text-red-600 font-semibold">
-                <span>Discount:</span>
+                <span>{t('orders.discount')}:</span>
                 <span>-{formatCurrency(order.discount)}</span>
               </div>
             )}
             <div className="flex justify-between text-slate-500">
-              <span>VAT Tax (15%):</span>
+              <span>{t('orders.vat')}:</span>
               <span className="font-semibold">{formatCurrency(order.tax)}</span>
             </div>
             <div className="flex justify-between text-sm font-extrabold text-resto-terracotta-600 pt-2 border-t border-slate-200 dark:border-slate-800">
-              <span>Total Amount:</span>
+              <span>{t('orders.totalAmount')}:</span>
               <span className="font-display text-base">{formatCurrency(order.total)}</span>
             </div>
           </div>
@@ -319,51 +345,41 @@ export function OrderDetailsModal({
                 leftIcon={<Ban className="w-4 h-4" />}
                 className="font-bold bg-red-600 hover:bg-red-700"
               >
-                {isRtl ? 'إلغاء الطلب' : 'Cancel Order'}
+                {t('orders.cancelOrder')}
               </Button>
             )}
 
-            {/* Refund Action (Completed Orders - ADMIN/MANAGER Only) */}
+            {/* Refund Action (Completed Orders with Role Restrict) */}
             {isCompleted && canRefund && (
               <Button
                 variant="outline"
                 size="md"
                 onClick={() => setIsRefundModalOpen(true)}
-                leftIcon={<RefreshCw className="w-4 h-4 text-resto-terracotta-600" />}
-                disabled={order.payments?.every(p => p.status === 'REFUNDED')}
-                className="font-bold border-resto-terracotta-500 text-resto-terracotta-600 hover:bg-resto-terracotta-50 dark:hover:bg-slate-800"
+                leftIcon={<RefreshCw className="w-4 h-4" />}
+                className="font-bold border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30"
               >
-                {order.payments?.every(p => p.status === 'REFUNDED')
-                  ? (isRtl ? 'تم استرداد المبلغ' : 'Already Refunded')
-                  : (isRtl ? 'استرداد المبلغ' : 'Refund Payment')}
+                {t('orders.refundPayment')}
               </Button>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Advance Status Button */}
-            {!isCompleted && !isCancelled && getNextStatus(order.status) && (
-              <Button
-                variant="primary"
-                size="md"
-                onClick={handleAdvance}
-                isLoading={isSubmitting}
-                disabled={isSubmitting}
-                rightIcon={<ArrowRight className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />}
-                className="bg-resto-terracotta-600 hover:bg-resto-terracotta-500 font-bold"
-              >
-                {getNextStatusLabel(getNextStatus(order.status)!)}
-              </Button>
-            )}
-
-            <Button variant="ghost" size="md" onClick={onClose}>
-              {isRtl ? 'إغلاق' : 'Close'}
+          {/* Advance Status Button */}
+          {!isCompleted && !isCancelled && (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleAdvance}
+              disabled={isSubmitting}
+              leftIcon={<CheckCircle2 className="w-4 h-4" />}
+              className="bg-resto-terracotta-600 hover:bg-resto-terracotta-500 font-bold"
+            >
+              {isSubmitting ? t('common.loading') : getNextStatusLabel(getNextStatus(order.status) || 'COMPLETED')}
             </Button>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Cancellation Dialog */}
+      {/* Sub-Modals for Cancellation and Refund */}
       <OrderCancelModal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
@@ -372,7 +388,6 @@ export function OrderDetailsModal({
         isSubmitting={isSubmitting}
       />
 
-      {/* Refund Dialog */}
       <OrderRefundModal
         isOpen={isRefundModalOpen}
         onClose={() => setIsRefundModalOpen(false)}

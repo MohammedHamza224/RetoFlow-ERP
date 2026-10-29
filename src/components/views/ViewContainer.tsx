@@ -32,6 +32,7 @@ const SupplierView = lazy(() => import('./SupplierView').then(m => ({ default: m
 const AnalyticsView = lazy(() => import('./AnalyticsView').then(m => ({ default: m.AnalyticsView })));
 const DashboardView = lazy(() => import('./DashboardView').then(m => ({ default: m.DashboardView })));
 const AiView = lazy(() => import('./AiView').then(m => ({ default: m.AiView })));
+const UserView = lazy(() => import('./UserView').then(m => ({ default: m.UserView })));
 const SettingsView = lazy(() => import('./SettingsView').then(m => ({ default: m.SettingsView })));
 
 export interface ViewContainerProps {
@@ -69,6 +70,8 @@ export function ViewContainer({ activeTab, currentUser }: ViewContainerProps) {
       case 'ai':
       case 'ai-assistant':
         return <AiView />;
+      case 'users':
+        return <UserView />;
       case 'settings':
         return <SettingsView />;
       default:
@@ -76,7 +79,7 @@ export function ViewContainer({ activeTab, currentUser }: ViewContainerProps) {
     }
   };
 
-  if (['dashboard', 'analytics', 'pos', 'menu', 'customers', 'tables', 'orders', 'inventory', 'suppliers', 'ai', 'ai-assistant', 'settings'].includes(activeTab)) {
+  if (['dashboard', 'analytics', 'pos', 'menu', 'customers', 'tables', 'orders', 'inventory', 'suppliers', 'ai', 'ai-assistant', 'users', 'settings'].includes(activeTab)) {
     return (
       <Suspense fallback={<Skeleton className="w-full h-[80vh] rounded-xl" />}>
         {renderActiveView()}
@@ -140,6 +143,7 @@ export function ViewContainer({ activeTab, currentUser }: ViewContainerProps) {
 
   const currentModule = getModuleDetails(activeTab);
   const Icon = currentModule.icon;
+  const isRtl = i18n.language === 'ar';
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -164,13 +168,13 @@ export function ViewContainer({ activeTab, currentUser }: ViewContainerProps) {
 
         {/* User Context & Config Badge */}
         <div className="flex flex-wrap items-center gap-2 bg-black/20 p-2.5 rounded-xl border border-white/10 text-xs">
-          <span className="text-slate-400">User:</span>
+          <span className="text-slate-400">{isRtl ? 'المستخدم:' : 'User:'}</span>
           <span className="font-bold text-white">{currentUser.name}</span>
           <span className="text-slate-500">|</span>
-          <span className="text-slate-400">VAT Rate:</span>
+          <span className="text-slate-400">{isRtl ? 'نسبة الضريبة:' : 'VAT Rate:'}</span>
           <span className="font-bold text-resto-terracotta-400">{DEFAULT_VAT_RATE}%</span>
           <span className="text-slate-500">|</span>
-          <span className="text-slate-400">Mode:</span>
+          <span className="text-slate-400">{isRtl ? 'اللغة:' : 'Mode:'}</span>
           <span className="font-bold text-emerald-400">{i18n.language.toUpperCase()} ({document.dir.toUpperCase()})</span>
         </div>
       </div>
@@ -179,27 +183,33 @@ export function ViewContainer({ activeTab, currentUser }: ViewContainerProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-500">POS Engine Live</CardTitle>
+            <CardTitle className="text-sm font-semibold text-slate-500">
+              {isRtl ? 'محرك نقطة البيع الحي' : 'POS Engine Live'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
               <CheckCircle2 className="w-4 h-4" />
-              Atomic Checkout & Stock Deduction
+              {isRtl ? 'إتمام الدفع وخصم المخزون الذري' : 'Atomic Checkout & Stock Deduction'}
             </div>
             <p className="text-xs text-muted-foreground">
-              Executes `execute_pos_checkout` RPC, capturing price & snapshot cost.
+              {isRtl
+                ? 'تنفيذ دالة execute_pos_checkout وحفظ السعر والتكلفة بدقة.'
+                : 'Executes `execute_pos_checkout` RPC, capturing price & snapshot cost.'}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-500">Order Lifecycle Engine</CardTitle>
+            <CardTitle className="text-sm font-semibold text-slate-500">
+              {isRtl ? 'محرك دورة حياة الطلبات' : 'Order Lifecycle Engine'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
               <CheckCircle2 className="w-4 h-4" />
-              Strict State Machine Matrix
+              {isRtl ? 'مصفوفة حالات صارمة' : 'Strict State Machine Matrix'}
             </div>
             <p className="text-xs text-muted-foreground">
               PENDING → CONFIRMED → PREPARING → READY → COMPLETED.
@@ -209,15 +219,19 @@ export function ViewContainer({ activeTab, currentUser }: ViewContainerProps) {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-500">Cancellation & Refund Engine</CardTitle>
+            <CardTitle className="text-sm font-semibold text-slate-500">
+              {isRtl ? 'محرك الإلغاء والاسترداد' : 'Cancellation & Refund Engine'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
               <CheckCircle2 className="w-4 h-4" />
-              Idempotent Stock Restoration & Full Refund
+              {isRtl ? 'إرجاع المخزون التلقائي والاسترداد الكامل' : 'Idempotent Stock Restoration & Full Refund'}
             </div>
             <p className="text-xs text-muted-foreground">
-              Atomic RPC stock restoration and role-restricted payment refund handling.
+              {isRtl
+                ? 'استعادة المخزون ذرياً ومعالجة استرداد المدفوعات بصلاحيات مقيدة.'
+                : 'Atomic RPC stock restoration and role-restricted payment refund handling.'}
             </p>
           </CardContent>
         </Card>

@@ -13,6 +13,8 @@ import {
   ShieldAlert,
   ArrowUpRight,
   Package,
+  RotateCcw,
+  Check,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -34,6 +36,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Input } from '@/components/ui/Input';
 
 const STATUS_COLORS: Record<string, string> = {
   COMPLETED: '#10b981', // emerald
@@ -46,7 +49,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const REASON_COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#64748b'];
 
-type DateRangePreset = 'TODAY' | 'YESTERDAY' | 'LAST_7' | 'LAST_30' | 'THIS_MONTH' | 'ALL';
+type DateRangePreset = 'ALL' | 'TODAY' | 'YESTERDAY' | 'LAST_7' | 'LAST_30' | 'THIS_MONTH' | 'CUSTOM';
 
 const PRESET_LABELS: Record<DateRangePreset, { en: string; ar: string }> = {
   ALL: { en: 'All Time', ar: 'كل الأوقات' },
@@ -55,37 +58,47 @@ const PRESET_LABELS: Record<DateRangePreset, { en: string; ar: string }> = {
   LAST_7: { en: 'Last 7 Days', ar: 'آخر 7 أيام' },
   LAST_30: { en: 'Last 30 Days', ar: 'آخر 30 يوماً' },
   THIS_MONTH: { en: 'This Month', ar: 'هذا الشهر' },
+  CUSTOM: { en: 'Custom Date Range', ar: 'نطاق تاريخ مخصص' },
 };
 
 export function AnalyticsDashboard() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const isRtl = i18n.language === 'ar';
   const isAuthorized = user?.role_name === 'ADMIN' || user?.role_name === 'MANAGER';
 
   const [datePreset, setDatePreset] = useState<DateRangePreset>('ALL');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
+  const [dateValidationError, setDateValidationError] = useState<string>('');
+
   const [metrics, setMetrics] = useState<BusinessMetrics | null>(null);
   const [breakdown, setBreakdown] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const getDateRangeParams = useCallback((preset: DateRangePreset) => {
+  const getDateRangeParams = useCallback((preset: DateRangePreset, cStart?: string, cEnd?: string) => {
     const now = new Date();
     let start: Date | null = null;
     let end: Date | null = null;
 
     if (preset === 'TODAY') {
-      start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-      end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     } else if (preset === 'YESTERDAY') {
-      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0);
-      end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59);
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
     } else if (preset === 'LAST_7') {
       start = new Date(now.getTime() - 7 * 86400000);
     } else if (preset === 'LAST_30') {
       start = new Date(now.getTime() - 30 * 86400000);
     } else if (preset === 'THIS_MONTH') {
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    } else if (preset === 'CUSTOM' && cStart && cEnd) {
+      const [sYear, sMonth, sDay] = cStart.split('-').map(Number);
+      start = new Date(sYear, sMonth - 1, sDay, 0, 0, 0, 0);
+      const [eYear, eMonth, eDay] = cEnd.split('-').map(Number);
+      end = new Date(eYear, eMonth - 1, eDay, 23, 59, 59, 999);
     }
 
     return {
@@ -94,33 +107,42 @@ export function AnalyticsDashboard() {
     };
   }, []);
 
-  const loadAnalytics = useCallback(async (preset: DateRangePreset, forceFetch: boolean = false) => {
+  const loadAnalytics = useCallback(async (
+    preset: DateRangePreset,
+    forceFetch: boolean = false,
+    cStart?: string,
+    cEnd?: string
+  ) => {
     if (!isAuthorized) return;
     
-    // 1. Instant Synchronous Cache Check (0ms UI render)
-    const cached = DatabaseService.getCachedAnalyticsSync(preset);
-    const needsFetch = forceFetch || !cached;
+    // If CUSTOM and dates are not fully supplied, skip fetching
+    if (preset === 'CUSTOM' && (!cStart || !cEnd)) {
+      return;
+    }
+
+    const cacheKey = preset === 'CUSTOM' ? `CUSTOM_${cStart}_${cEnd}` : preset;
+
+    // 1. Instant Synchronous Cache Check
+    const cached = DatabaseService.getCachedAnalyticsSync(cacheKey);
     
-    // If we have cache and don't strictly need to fetch, just use it
     if (cached && !forceFetch) {
       setMetrics(cached.metrics);
       setBreakdown(cached.breakdown);
       setIsLoading(false);
-      return; // Skip background refresh to save requests (unless forced)
+      return;
     }
 
-    // If we have cache but are fetching in background, we still show the cached data instantly
     if (cached) {
       setMetrics(cached.metrics);
       setBreakdown(cached.breakdown);
-      setIsLoading(false); // Don't show skeleton
-    } else if (!metrics) {
-      setIsLoading(true); // Only show skeleton if we have NO data at all
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
     }
     
     setErrorMsg('');
 
-    const { startDate, endDate } = getDateRangeParams(preset);
+    const { startDate, endDate } = getDateRangeParams(preset, cStart, cEnd);
 
     try {
       const [metricsData, breakdownData] = await Promise.all([
@@ -128,8 +150,8 @@ export function AnalyticsDashboard() {
         DatabaseService.getAnalyticsBreakdown(user?.id, startDate, endDate),
       ]);
       
-      // 2. Cache for subsequent rapid navigations
-      DatabaseService.setCachedAnalyticsSync(preset, metricsData, breakdownData);
+      // Cache for subsequent rapid navigations
+      DatabaseService.setCachedAnalyticsSync(cacheKey, metricsData, breakdownData);
       
       setMetrics(metricsData);
       setBreakdown(breakdownData);
@@ -141,11 +163,59 @@ export function AnalyticsDashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, isAuthorized, getDateRangeParams, isRtl]);
+  }, [user?.id, isAuthorized, getDateRangeParams, isRtl]);
 
   useEffect(() => {
-    loadAnalytics(datePreset, !metrics);
+    if (datePreset !== 'CUSTOM') {
+      loadAnalytics(datePreset, false);
+    }
   }, [datePreset, loadAnalytics]);
+
+  const handleApplyCustomDate = () => {
+    setDateValidationError('');
+    if (!customStartDate || !customEndDate) {
+      setDateValidationError(isRtl ? 'يرجى تحديد تاريخ البداية وتاريخ النهاية معاً.' : 'Please select both start and end dates.');
+      return;
+    }
+    if (customStartDate > customEndDate) {
+      setDateValidationError(t('analytics.invalidDateRange'));
+      return;
+    }
+    loadAnalytics('CUSTOM', true, customStartDate, customEndDate);
+  };
+
+  const handleResetDate = () => {
+    setDatePreset('ALL');
+    setCustomStartDate('');
+    setCustomEndDate('');
+    setDateValidationError('');
+    loadAnalytics('ALL', false);
+  };
+
+  // Helper translations for statuses
+  const translateStatus = (status: string) => {
+    const key = `status.${status}`;
+    const translated = t(key);
+    return translated !== key ? translated : status;
+  };
+
+  // Helper translations for cancellation reasons
+  const translateReason = (reason: string) => {
+    switch (reason) {
+      case 'CUSTOMER_REQUEST': return t('orders.reasonCustomer');
+      case 'OUT_OF_STOCK': return t('orders.reasonOutOfStock');
+      case 'DUPLICATE_ORDER': return t('orders.reasonDuplicate');
+      case 'WRONG_ORDER': return t('orders.reasonWrong');
+      default: return t('orders.reasonOther');
+    }
+  };
+
+  // Helper translations for payment methods
+  const translatePaymentMethod = (method: string) => {
+    const key = `paymentMethod.${method}`;
+    const translated = t(key);
+    return translated !== key ? translated : method.replace('_', ' ');
+  };
 
   // Role Access Restriction Guard
   if (!isAuthorized) {
@@ -153,12 +223,10 @@ export function AnalyticsDashboard() {
       <div className="p-8 rounded-xl bg-card border border-red-200 dark:border-red-900/60 text-center space-y-4 max-w-lg mx-auto my-12 select-none">
         <ShieldAlert className="w-12 h-12 text-red-500 mx-auto animate-bounce" />
         <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-          {isRtl ? 'تم تقييد الوصول' : 'Access Restricted'}
+          {t('analytics.accessRestricted')}
         </h3>
         <p className="text-xs text-slate-500">
-          {isRtl
-            ? 'لوحة تحكم تحليلات وذكاء أداء المطعم تتطلب صلاحية مدير النظام أو المشرف.'
-            : 'Executive Analytics & Business Intelligence Dashboard requires ADMIN or MANAGER authorization.'}
+          {t('analytics.accessRestrictedDesc')}
         </p>
       </div>
     );
@@ -167,14 +235,14 @@ export function AnalyticsDashboard() {
   return (
     <div className="space-y-6 select-none">
       {/* Header & Date Preset Filters */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
           <h3 className="font-display text-xl font-bold text-resto-charcoal-900 dark:text-slate-100 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-resto-terracotta-600" />
-            {isRtl ? 'لوحة تحكم ذكاء أداء المطعم والتحليلات' : 'Executive Business Intelligence & Analytics'}
+            {t('analytics.title')}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {isRtl ? 'مؤشرات الأداء الرئيسية المركزية، الأرباح الهامشية التاريخية ومراقبة سلامة المخزون' : 'Centralized performance KPIs, historical gross margins, and inventory health metrics'}
+            {t('analytics.subtitle')}
           </p>
           <div className="flex items-center gap-1.5 mt-2 text-xs font-semibold text-resto-terracotta-600 dark:text-resto-terracotta-400 bg-resto-terracotta-50/50 dark:bg-resto-terracotta-900/20 w-fit px-2.5 py-1 rounded-md border border-resto-terracotta-100 dark:border-resto-terracotta-800/30">
             <Calendar className="w-3.5 h-3.5" />
@@ -189,29 +257,102 @@ export function AnalyticsDashboard() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 bg-slate-100 dark:bg-slate-800/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
-          <Calendar className="w-4 h-4 text-slate-400 ml-1" />
-          {(['ALL', 'TODAY', 'YESTERDAY', 'LAST_7', 'LAST_30', 'THIS_MONTH'] as const).map(p => (
-            <button
-              key={p}
-              onClick={() => setDatePreset(p)}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-                datePreset === p
-                  ? 'bg-resto-charcoal-800 text-white shadow-sm dark:bg-slate-700'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-              }`}
+        {/* Date Filter Bar */}
+        <div className="flex flex-col gap-2 w-full lg:w-auto">
+          <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-800/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+            <Calendar className="w-4 h-4 text-slate-400 mx-1" />
+            {(['ALL', 'TODAY', 'YESTERDAY', 'LAST_7', 'LAST_30', 'THIS_MONTH', 'CUSTOM'] as const).map(p => (
+              <button
+                key={p}
+                onClick={() => {
+                  setDatePreset(p);
+                  setDateValidationError('');
+                }}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                  datePreset === p
+                    ? 'bg-resto-charcoal-800 text-white shadow-sm dark:bg-slate-700'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                {PRESET_LABELS[p][isRtl ? 'ar' : 'en']}
+              </button>
+            ))}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                if (datePreset === 'CUSTOM') {
+                  handleApplyCustomDate();
+                } else {
+                  loadAnalytics(datePreset, true);
+                }
+              }}
+              className="h-7 w-7 text-slate-500"
+              title={t('common.refresh')}
             >
-              {PRESET_LABELS[p][isRtl ? 'ar' : 'en']}
-            </button>
-          ))}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => loadAnalytics(datePreset, true)}
-            className="h-7 w-7 text-slate-500"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-          </Button>
+              <RefreshCw className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+
+          {/* Custom Date Range Selector Inputs */}
+          {datePreset === 'CUSTOM' && (
+            <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-card border border-resto-terracotta-200 dark:border-resto-terracotta-900/50 shadow-subtle animate-in fade-in duration-150">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-semibold text-slate-500">{t('analytics.startDate')}:</span>
+                <Input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => {
+                    setCustomStartDate(e.target.value);
+                    setDateValidationError('');
+                  }}
+                  className="h-8 text-xs w-36 bg-background"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-semibold text-slate-500">{t('analytics.endDate')}:</span>
+                <Input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => {
+                    setCustomEndDate(e.target.value);
+                    setDateValidationError('');
+                  }}
+                  className="h-8 text-xs w-36 bg-background"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 ms-auto">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleApplyCustomDate}
+                  leftIcon={<Check className="w-3.5 h-3.5" />}
+                  className="h-8 px-3 text-xs bg-resto-terracotta-600 hover:bg-resto-terracotta-500 font-bold"
+                >
+                  {t('analytics.apply')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetDate}
+                  leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                  className="h-8 px-3 text-xs"
+                >
+                  {t('analytics.reset')}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Date Validation Error Alert */}
+          {dateValidationError && (
+            <div className="p-2.5 rounded-lg bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-600 text-xs font-semibold flex items-center gap-1.5 animate-in fade-in duration-150">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{dateValidationError}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -222,8 +363,8 @@ export function AnalyticsDashboard() {
             <ShieldAlert className="w-4 h-4 text-red-500 shrink-0" />
             <span>{errorMsg}</span>
           </div>
-          <Button variant="outline" size="sm" onClick={() => loadAnalytics(datePreset, true)}>
-            {isRtl ? 'إعادة المحاولة' : 'Retry'}
+          <Button variant="outline" size="sm" onClick={() => loadAnalytics(datePreset, true, customStartDate, customEndDate)}>
+            {t('analytics.retry')}
           </Button>
         </div>
       )}
@@ -252,7 +393,7 @@ export function AnalyticsDashboard() {
               <CardContent className="p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">
-                    {isRtl ? 'إجمالي الإيرادات' : 'Total Revenue'}
+                    {t('analytics.revenue')}
                   </span>
                   <DollarSign className="w-4 h-4 text-emerald-500" />
                 </div>
@@ -269,7 +410,7 @@ export function AnalyticsDashboard() {
               <CardContent className="p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">
-                    {isRtl ? 'الطلبات المكتملة' : 'Completed Orders'}
+                    {t('analytics.completedOrders')}
                   </span>
                   <ShoppingBag className="w-4 h-4 text-blue-500" />
                 </div>
@@ -286,7 +427,7 @@ export function AnalyticsDashboard() {
               <CardContent className="p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">
-                    {isRtl ? 'متوسط الطلب' : 'Avg Order Value'}
+                    {t('analytics.avgOrderValue')}
                   </span>
                   <TrendingUp className="w-4 h-4 text-amber-500" />
                 </div>
@@ -303,7 +444,7 @@ export function AnalyticsDashboard() {
               <CardContent className="p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">
-                    {isRtl ? 'الربح الإجمالي' : 'Gross Profit'}
+                    {t('analytics.grossProfit')}
                   </span>
                   <ArrowUpRight className="w-4 h-4 text-resto-terracotta-600" />
                 </div>
@@ -319,26 +460,34 @@ export function AnalyticsDashboard() {
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
               <CardContent className="p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Cancellation Rate</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider">
+                    {t('analytics.cancellationRate')}
+                  </span>
                   <Percent className="w-4 h-4 text-red-500" />
                 </div>
                 <div className="text-lg font-extrabold font-display text-red-600 dark:text-red-400">
                   {metrics.cancellation_rate}%
                 </div>
-                <span className="text-[9px] text-slate-400 block">{metrics.cancelled_orders_count} Orders Cancelled</span>
+                <span className="text-[9px] text-slate-400 block">
+                  {metrics.cancelled_orders_count} {isRtl ? 'طلب ملغى' : 'Orders Cancelled'}
+                </span>
               </CardContent>
             </Card>
 
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
               <CardContent className="p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Low Stock Items</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider">
+                    {isRtl ? 'أصناف منخفضة المخزون' : 'Low Stock Items'}
+                  </span>
                   <AlertTriangle className="w-4 h-4 text-amber-500" />
                 </div>
                 <div className="text-lg font-extrabold font-display text-amber-600 dark:text-amber-400">
                   {metrics.inventory_low_stock_count}
                 </div>
-                <span className="text-[9px] text-slate-400 block">Requires Reorder</span>
+                <span className="text-[9px] text-slate-400 block">
+                  {isRtl ? 'تحتاج إعادة طلب' : 'Requires Reorder'}
+                </span>
               </CardContent>
             </Card>
           </div>
@@ -349,14 +498,16 @@ export function AnalyticsDashboard() {
             <Card className="bg-card border border-slate-200 dark:border-slate-800 md:col-span-2">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center justify-between">
-                  <span>Revenue & Gross Profit Performance Trend</span>
-                  <Badge variant="success" className="text-[10px]">Refund-Aware Historical Margin</Badge>
+                  <span>{isRtl ? 'اتجاه الإيرادات وأداء إجمالي الربح' : 'Revenue & Gross Profit Performance Trend'}</span>
+                  <Badge variant="success" className="text-[10px]">
+                    {isRtl ? 'هامش تاريخي مراعي للاستردادات' : 'Refund-Aware Historical Margin'}
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-72 pt-4">
                 {!breakdown.revenue_profit_trend || breakdown.revenue_profit_trend.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                    No sales trend data available for this period.
+                    {isRtl ? 'لا توجد بيانات مبيعات متوفرة لهذه الفترة.' : 'No sales trend data available for this period.'}
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
@@ -364,9 +515,9 @@ export function AnalyticsDashboard() {
                       <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                       <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                       <YAxis tick={{ fontSize: 10 }} />
-                      <Tooltip formatter={(val: number) => [formatCurrency(val), 'Amount']} />
-                      <Bar dataKey="revenue" name="Total Revenue" fill="#10b981" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="profit" name="Gross Profit" fill="#ea580c" radius={[4, 4, 0, 0]} />
+                      <Tooltip formatter={(val: number) => [formatCurrency(val), isRtl ? 'المبلغ' : 'Amount']} />
+                      <Bar dataKey="revenue" name={isRtl ? 'إجمالي الإيرادات' : 'Total Revenue'} fill="#10b981" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="profit" name={isRtl ? 'إجمالي الربح' : 'Gross Profit'} fill="#ea580c" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -377,14 +528,16 @@ export function AnalyticsDashboard() {
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center justify-between">
-                  <span>Top Performing Menu Products</span>
-                  <Badge variant="info" className="text-[10px]">Units Sold</Badge>
+                  <span>{isRtl ? 'أعلى منتجات القائمة مبيعاً' : 'Top Performing Menu Products'}</span>
+                  <Badge variant="info" className="text-[10px]">
+                    {isRtl ? 'الوحدات المباعة' : 'Units Sold'}
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-64 pt-4">
                 {breakdown.top_products.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                    No product sales recorded for this period.
+                    {isRtl ? 'لا توجد مبيعات مسجلة للمنتجات في هذه الفترة.' : 'No product sales recorded for this period.'}
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
@@ -392,7 +545,7 @@ export function AnalyticsDashboard() {
                       <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                       <XAxis type="number" textAnchor="end" tick={{ fontSize: 10 }} />
                       <YAxis dataKey="product_name" type="category" width={110} tick={{ fontSize: 10 }} />
-                      <Tooltip formatter={(val: number) => [`${val} Units`, 'Quantity']} />
+                      <Tooltip formatter={(val: number) => [`${val} ${isRtl ? 'وحدة' : 'Units'}`, isRtl ? 'الكمية' : 'Quantity']} />
                       <Bar dataKey="quantity" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -404,14 +557,16 @@ export function AnalyticsDashboard() {
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center justify-between">
-                  <span>Category Revenue Breakdown</span>
-                  <Badge variant="outline" className="text-[10px]">Menu Categories</Badge>
+                  <span>{isRtl ? 'توزيع الإيرادات حسب التصنيف' : 'Category Revenue Breakdown'}</span>
+                  <Badge variant="outline" className="text-[10px]">
+                    {isRtl ? 'تصنيفات القائمة' : 'Menu Categories'}
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-64 pt-4">
                 {!breakdown.category_performance || breakdown.category_performance.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                    No category data available for this period.
+                    {isRtl ? 'لا توجد بيانات تصنيفات متوفرة لهذه الفترة.' : 'No category data available for this period.'}
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
@@ -419,7 +574,7 @@ export function AnalyticsDashboard() {
                       <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                       <XAxis dataKey="category_name" tick={{ fontSize: 10 }} />
                       <YAxis tick={{ fontSize: 10 }} />
-                      <Tooltip formatter={(val: number) => [formatCurrency(val), 'Revenue']} />
+                      <Tooltip formatter={(val: number) => [formatCurrency(val), isRtl ? 'الإيرادات' : 'Revenue']} />
                       <Bar dataKey="revenue" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -431,17 +586,25 @@ export function AnalyticsDashboard() {
             <Card className="bg-card border border-slate-200 dark:border-slate-800 md:col-span-2">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center justify-between">
-                  <span>Payment Method Analysis</span>
-                  <Badge variant="info" className="text-[10px]">Completed Payments</Badge>
+                  <span>{isRtl ? 'تحليل طرق الدفع' : 'Payment Method Analysis'}</span>
+                  <Badge variant="info" className="text-[10px]">
+                    {isRtl ? 'المدفوعات المكتملة' : 'Completed Payments'}
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-2">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                   {(breakdown.payment_methods || []).map((pm: any, idx: number) => (
                     <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase block">{pm.method.replace('_', ' ')}</span>
-                      <span className="text-sm font-extrabold font-display text-slate-900 dark:text-slate-100 block">{formatCurrency(pm.amount)}</span>
-                      <span className="text-[9px] text-slate-400 block">{pm.count} Transactions</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                        {translatePaymentMethod(pm.method)}
+                      </span>
+                      <span className="text-sm font-extrabold font-display text-slate-900 dark:text-slate-100 block">
+                        {formatCurrency(pm.amount)}
+                      </span>
+                      <span className="text-[9px] text-slate-400 block">
+                        {pm.count} {isRtl ? 'عملية' : 'Transactions'}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -452,8 +615,10 @@ export function AnalyticsDashboard() {
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center justify-between">
-                  <span>Order Lifecycle Distribution</span>
-                  <Badge variant="outline" className="text-[10px]">Status Mix</Badge>
+                  <span>{isRtl ? 'توزيع دورة حياة الطلبات' : 'Order Lifecycle Distribution'}</span>
+                  <Badge variant="outline" className="text-[10px]">
+                    {isRtl ? 'حالات الطلب' : 'Status Mix'}
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-64 pt-2 flex items-center justify-center">
@@ -468,13 +633,13 @@ export function AnalyticsDashboard() {
                       outerRadius={75}
                       innerRadius={45}
                       paddingAngle={4}
-                      label={({ status, count }) => `${status}: ${count}`}
+                      label={({ status, count }) => `${translateStatus(status)}: ${count}`}
                     >
                       {breakdown.status_breakdown.map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || '#94a3b8'} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(val: number) => [`${val} Orders`, 'Count']} />
+                    <Tooltip formatter={(val: number) => [`${val} ${isRtl ? 'طلب' : 'Orders'}`, isRtl ? 'العدد' : 'Count']} />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -483,12 +648,14 @@ export function AnalyticsDashboard() {
             {/* Cancellation Reasons Breakdown */}
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold">Cancellation Reason Analysis</CardTitle>
+                <CardTitle className="text-sm font-bold">
+                  {isRtl ? 'تحليل أسباب الإلغاء' : 'Cancellation Reason Analysis'}
+                </CardTitle>
               </CardHeader>
               <CardContent className="h-64 pt-2 flex items-center justify-center">
                 {breakdown.cancellation_reasons.every((r: any) => r.count === 0) ? (
                   <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                    No order cancellations recorded in this period.
+                    {isRtl ? 'لا توجد طلبات ملغاة مسجلة في هذه الفترة.' : 'No order cancellations recorded in this period.'}
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
@@ -501,7 +668,7 @@ export function AnalyticsDashboard() {
                         cy="50%"
                         outerRadius={70}
                         paddingAngle={3}
-                        label={({ reason, count }) => `${reason.replace('_', ' ')}: ${count}`}
+                        label={({ reason, count }) => `${translateReason(reason)}: ${count}`}
                       >
                         {breakdown.cancellation_reasons.map((entry: any, index: number) => (
                           <Cell key={`cell-reason-${index}`} fill={REASON_COLORS[index % REASON_COLORS.length]} />
@@ -518,8 +685,10 @@ export function AnalyticsDashboard() {
             <Card className="bg-card border border-slate-200 dark:border-slate-800 md:col-span-2">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center justify-between">
-                  <span>Inventory Stock Health & Alert Monitoring</span>
-                  <Badge variant="warning" className="text-[10px]">Restock Thresholds</Badge>
+                  <span>{isRtl ? 'مراقبة وتنبيهات صحة مخزون الأصناف' : 'Inventory Stock Health & Alert Monitoring'}</span>
+                  <Badge variant="warning" className="text-[10px]">
+                    {isRtl ? 'حدود إعادة الطلب' : 'Restock Thresholds'}
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="max-h-64 overflow-y-auto pt-2 space-y-2 text-xs">
@@ -536,11 +705,11 @@ export function AnalyticsDashboard() {
                     <div className="flex items-center gap-3">
                       <div className="text-right font-mono">
                         <span className="font-extrabold block text-sm">{prod.stock_quantity}</span>
-                        <span className="text-[9px] text-slate-400">Min: {prod.minimum_stock}</span>
+                        <span className="text-[9px] text-slate-400">{isRtl ? 'الحد الأدنى' : 'Min'}: {prod.minimum_stock}</span>
                       </div>
 
                       <Badge variant={prod.status === 'OUT' ? 'destructive' : prod.status === 'LOW' ? 'warning' : 'success'} className="text-[9px]">
-                        {prod.status}
+                        {prod.status === 'OUT' ? (isRtl ? 'نافد' : 'OUT') : prod.status === 'LOW' ? (isRtl ? 'منخفض' : 'LOW') : (isRtl ? 'طبيعي' : 'NORMAL')}
                       </Badge>
                     </div>
                   </div>

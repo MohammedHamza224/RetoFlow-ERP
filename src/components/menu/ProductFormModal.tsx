@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertCircle, Upload, X } from 'lucide-react';
 import { Product, Category } from '@/types/database.types';
+import { getActiveCurrency } from '@/lib/currency';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -20,6 +22,8 @@ export function ProductFormModal({
   categories,
   editingProduct,
 }: ProductFormModalProps) {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.language === 'ar';
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
@@ -116,31 +120,31 @@ export function ProductFormModal({
     setFormError('');
 
     if (!formData.name.trim()) {
-      setFormError('Product name is required.');
+      setFormError(t('menu.productForm.productNameRequired'));
       return;
     }
     if (!formData.sku.trim()) {
-      setFormError('Product SKU is required.');
+      setFormError(t('menu.productForm.skuRequired'));
       return;
     }
     if (!formData.category_id) {
-      setFormError('Please select a product category.');
+      setFormError(t('menu.productForm.categoryRequired'));
       return;
     }
     if (Number(formData.price) < 0) {
-      setFormError('Selling price must be greater than or equal to 0.');
+      setFormError(isRtl ? 'سعر البيع يجب أن يكون أكبر من أو يساوي 0.' : 'Selling price must be greater than or equal to 0.');
       return;
     }
     if (Number(formData.cost) < 0) {
-      setFormError('Cost reference must be greater than or equal to 0.');
+      setFormError(isRtl ? 'التكلفة يجب أن تكون أكبر من أو تساوي 0.' : 'Cost reference must be greater than or equal to 0.');
       return;
     }
     if (Number(formData.stock_quantity) < 0) {
-      setFormError('Stock quantity cannot be negative.');
+      setFormError(isRtl ? 'كمية المخزون لا يمكن أن تكون سالبة.' : 'Stock quantity cannot be negative.');
       return;
     }
     if (Number(formData.minimum_stock) < 0) {
-      setFormError('Minimum stock threshold cannot be negative.');
+      setFormError(isRtl ? 'حد التنبيه الأدنى لا يمكن أن يكون سالباً.' : 'Minimum stock threshold cannot be negative.');
       return;
     }
 
@@ -149,7 +153,7 @@ export function ProductFormModal({
       await onSubmit(formData, imageFile);
       onClose();
     } catch (err: any) {
-      setFormError(err.message || 'Failed to save product.');
+      setFormError(err.message || (isRtl ? 'فشل حفظ الصنف.' : 'Failed to save product.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -159,8 +163,8 @@ export function ProductFormModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={editingProduct ? 'Edit Restaurant Product' : 'Create New Product'}
-      description="Manage product parameters, pricing, cost references, and stock thresholds."
+      title={editingProduct ? t('menu.productForm.editTitle') : t('menu.productForm.createTitle')}
+      description={t('menu.productForm.modalDesc')}
       maxWidth="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -174,12 +178,12 @@ export function ProductFormModal({
         {/* Section 1: Basic Information */}
         <div className="space-y-3">
           <h4 className="text-xs font-bold uppercase tracking-wider text-resto-terracotta-600 border-b border-slate-100 dark:border-slate-800 pb-1">
-            1. Basic Information
+            {t('menu.productForm.basicInfo')}
           </h4>
 
           {/* Image Upload Section */}
           <div className="space-y-1 mb-4">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Product Image (Optional)</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('menu.productForm.productImage')}</label>
             <div className="flex items-start gap-4 mt-2">
               <div className="relative w-24 h-24 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50 overflow-hidden shrink-0">
                 {imagePreview ? (
@@ -189,7 +193,7 @@ export function ProductFormModal({
                       type="button"
                       onClick={handleRemoveImage}
                       className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full hover:bg-red-500 transition-colors"
-                      title="Remove Image"
+                      title={isRtl ? 'حذف الصورة' : 'Remove Image'}
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -197,7 +201,7 @@ export function ProductFormModal({
                 ) : (
                   <div className="flex flex-col items-center text-slate-400">
                     <Upload className="w-6 h-6 mb-1" />
-                    <span className="text-[10px]">No Image</span>
+                    <span className="text-[10px]">{t('menu.noImage')}</span>
                   </div>
                 )}
               </div>
@@ -210,7 +214,7 @@ export function ProductFormModal({
                   className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-resto-terracotta-50 file:text-resto-terracotta-700 hover:file:bg-resto-terracotta-100 dark:file:bg-resto-terracotta-900/30 dark:file:text-resto-terracotta-300 cursor-pointer"
                 />
                 <p className="text-[10px] text-muted-foreground">
-                  Supported formats: JPG, PNG, WEBP. Max size: 5MB.
+                  {t('menu.productForm.imageHelp')}
                 </p>
               </div>
             </div>
@@ -218,49 +222,49 @@ export function ProductFormModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Product Name *</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('menu.productForm.productName')} *</label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g. Truffle Smash Burger"
+                placeholder={isRtl ? 'مثال: برجر سماش بالترفل' : 'e.g. Truffle Smash Burger'}
                 required
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">SKU Code *</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('menu.productForm.sku')} *</label>
               <Input
                 value={formData.sku}
                 onChange={(e) => setFormData({ ...formData, sku: e.target.value.toUpperCase() })}
-                placeholder="e.g. BRG-001"
+                placeholder={isRtl ? 'مثال: BRG-001' : 'e.g. BRG-001'}
                 required
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Category *</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('menu.productForm.category')} *</label>
             <select
               value={formData.category_id}
               onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
               className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
               required
             >
-              <option value="" disabled>Select Category</option>
+              <option value="" disabled>{t('menu.productForm.selectCategory')}</option>
               {categories.map(c => (
                 <option key={c.id} value={c.id} disabled={!c.is_active}>
-                  {c.name} {!c.is_active ? '(Inactive)' : ''}
+                  {c.name} {!c.is_active ? `(${t('common.inactive')})` : ''}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Description</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('menu.productForm.description')}</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Product ingredients, description, or notes..."
+              placeholder={isRtl ? 'المكونات، الوصف، أو ملاحظات الصنف...' : 'Product ingredients, description, or notes...'}
               className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
               rows={2}
             />
@@ -270,12 +274,14 @@ export function ProductFormModal({
         {/* Section 2: Pricing & Cost Snapshot */}
         <div className="space-y-3">
           <h4 className="text-xs font-bold uppercase tracking-wider text-resto-terracotta-600 border-b border-slate-100 dark:border-slate-800 pb-1">
-            2. Pricing & Financial Reference
+            {t('menu.productForm.pricingSection')}
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Selling Price (SAR) *</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                {t('menu.productForm.sellingPriceLabel')} ({getActiveCurrency()}) *
+              </label>
               <Input
                 type="number"
                 step="0.01"
@@ -287,7 +293,9 @@ export function ProductFormModal({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Unit Cost (SAR) *</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                {t('menu.productForm.unitCostLabel')} ({getActiveCurrency()}) *
+              </label>
               <Input
                 type="number"
                 step="0.01"
@@ -297,7 +305,7 @@ export function ProductFormModal({
                 required
               />
               <span className="text-[10px] text-muted-foreground block">
-                Used as product cost reference. Historical sales profit uses order_items.unit_cost snapshot.
+                {t('menu.productForm.costHelp')}
               </span>
             </div>
           </div>
@@ -306,12 +314,12 @@ export function ProductFormModal({
         {/* Section 3: Stock Control */}
         <div className="space-y-3">
           <h4 className="text-xs font-bold uppercase tracking-wider text-resto-terracotta-600 border-b border-slate-100 dark:border-slate-800 pb-1">
-            3. Stock & Inventory Control
+            {t('menu.productForm.stockSection')}
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Current Stock Quantity *</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('menu.productForm.stockQty')}</label>
               <Input
                 type="number"
                 min="0"
@@ -323,7 +331,7 @@ export function ProductFormModal({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Minimum Stock Alert Threshold *</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('menu.productForm.minStockAlert')}</label>
               <Input
                 type="number"
                 min="0"
@@ -343,7 +351,7 @@ export function ProductFormModal({
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                 className="rounded border-slate-300 text-resto-terracotta-600 focus:ring-resto-terracotta-500"
               />
-              <span>Active Product (Available in POS menu search)</span>
+              <span>{t('menu.productForm.activeCheckbox')}</span>
             </label>
           </div>
         </div>
@@ -351,11 +359,11 @@ export function ProductFormModal({
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <Button variant="ghost" size="md" type="button" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
 
           <Button variant="primary" size="md" type="submit" isLoading={isSubmitting}>
-            {editingProduct ? 'Save Product Changes' : 'Create Product'}
+            {editingProduct ? t('menu.productForm.saveChanges') : t('menu.productForm.createBtn')}
           </Button>
         </div>
       </form>

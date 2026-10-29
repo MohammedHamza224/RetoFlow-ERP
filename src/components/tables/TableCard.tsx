@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Users, CheckCircle2, Clock, CalendarCheck, Edit2 } from 'lucide-react';
 import { RestaurantTable, TableStatus } from '@/types/database.types';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
@@ -18,16 +19,18 @@ export const TableCard = React.memo(function TableCard({
   onEdit,
   onStatusChange,
 }: TableCardProps) {
+  const { t } = useTranslation();
+
   const getStatusBadge = () => {
     switch (table.status) {
       case 'AVAILABLE':
-        return <Badge variant="success" className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> AVAILABLE</Badge>;
+        return <Badge variant="success" className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {t('status.AVAILABLE')}</Badge>;
       case 'OCCUPIED':
-        return <Badge variant="warning" className="flex items-center gap-1 bg-amber-500 text-white"><Clock className="w-3 h-3" /> OCCUPIED</Badge>;
+        return <Badge variant="warning" className="flex items-center gap-1 bg-amber-500 text-white"><Clock className="w-3 h-3" /> {t('status.OCCUPIED')}</Badge>;
       case 'RESERVED':
-        return <Badge variant="outline" className="flex items-center gap-1 border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40"><CalendarCheck className="w-3 h-3" /> RESERVED</Badge>;
+        return <Badge variant="outline" className="flex items-center gap-1 border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40"><CalendarCheck className="w-3 h-3" /> {t('status.RESERVED')}</Badge>;
       default:
-        return <Badge variant="outline">UNKNOWN</Badge>;
+        return <Badge variant="outline">{table.status}</Badge>;
     }
   };
 
@@ -59,7 +62,7 @@ export const TableCard = React.memo(function TableCard({
       <CardContent className="p-4 pt-2 space-y-3">
         <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 bg-white/60 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-100 dark:border-slate-800/80">
           <Users className="w-4 h-4 text-resto-terracotta-600 shrink-0" />
-          <span className="font-semibold">{table.capacity} Guests Capacity</span>
+          <span className="font-semibold">{table.capacity} {t('tables.guestsCapacity')}</span>
         </div>
       </CardContent>
 
@@ -74,7 +77,7 @@ export const TableCard = React.memo(function TableCard({
                 : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-emerald-100'
             }`}
           >
-            Available
+            {t('status.AVAILABLE')}
           </button>
 
           <button
@@ -85,7 +88,7 @@ export const TableCard = React.memo(function TableCard({
                 : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-amber-100'
             }`}
           >
-            Occupied
+            {t('status.OCCUPIED')}
           </button>
 
           <button
@@ -96,13 +99,19 @@ export const TableCard = React.memo(function TableCard({
                 : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-blue-100'
             }`}
           >
-            Reserved
+            {t('status.RESERVED')}
           </button>
         </div>
 
         {isManagerOrAdmin && (
-          <Button variant="ghost" size="icon" onClick={() => onEdit(table)} className="h-7 w-7 text-slate-400 hover:text-slate-900">
-            <Edit2 className="w-3.5 h-3.5" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit(table)}
+            leftIcon={<Edit2 className="w-3.5 h-3.5" />}
+            className="h-7 text-xs px-2"
+          >
+            {t('common.edit')}
           </Button>
         )}
       </CardFooter>
