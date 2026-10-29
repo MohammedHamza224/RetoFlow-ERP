@@ -2895,8 +2895,16 @@ export class DatabaseService {
         serviceCache.invalidateUsers();
         return edgeData.user;
       }
-    } catch (e) {
-      console.warn('[DatabaseService] Edge function invocation skipped/fallback to direct flow');
+
+      if (edgeData?.error) {
+        throw new Error(edgeData.error);
+      }
+    } catch (e: any) {
+      // If it's a known business/validation error from the edge function, re-throw it
+      if (e?.message && !e.message.includes('FunctionsHttpError') && !e.message.includes('Failed to send')) {
+        throw e;
+      }
+      console.warn('[DatabaseService] Edge function invocation skipped/fallback to direct flow:', e.message);
     }
 
     // 2. Direct Supabase Database Flow (for standard Supabase setup)
@@ -2907,6 +2915,7 @@ export class DatabaseService {
     }
 
     let authUserId: string | null = null;
+    let authErrorMsg: string | null = null;
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: trimmedEmail,
@@ -2917,21 +2926,29 @@ export class DatabaseService {
       });
 
       if (authError) {
+        authErrorMsg = authError.message;
         console.warn('[DatabaseService] auth.signUp error:', authError.message);
       }
       if (authData?.user?.id) {
         authUserId = authData.user.id;
       }
     } catch (authEx: any) {
+      authErrorMsg = authEx.message;
       console.warn('[DatabaseService] Auth registration fallback:', authEx.message);
     }
 
-    const fallbackId = authUserId || crypto.randomUUID();
+    if (!authUserId) {
+      throw new Error(
+        authErrorMsg 
+          ? `Authentication registration failed: ${authErrorMsg}` 
+          : 'Failed to create user authentication account. Please ensure the admin-users Edge Function is deployed.'
+      );
+    }
 
     const { data: insertedUser, error: insertError } = await supabase
       .from('users')
       .upsert({
-        id: fallbackId,
+        id: authUserId,
         role_id: targetRole.id,
         name: trimmedName,
         email: trimmedEmail,
