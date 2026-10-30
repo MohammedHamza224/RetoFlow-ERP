@@ -34,6 +34,7 @@
     "reset": "إعادة تعيين",
     "status": "الحالة",
     "all": "الكل",
+    "allStatuses": "جميع الحالات",
     "active": "نشط",
     "inactive": "غير نشط",
     "details": "التفاصيل",
@@ -41,7 +42,8 @@
     "retry": "إعادة المحاولة",
     "required": "مطلوب",
     "close": "إغلاق",
-    "back": "رجوع"
+    "back": "رجوع",
+    "print": "طباعة"
   },
   "auth": {
     "welcomeTitle": "مرحباً بك",
@@ -147,7 +149,12 @@
     "walkInGuest": "عميل عابر",
     "noItemsMatch": "لا توجد أصناف مطابقة للبحث في القائمة.",
     "totalPayable": "الإجمالي المستحق:",
-    "left": "متبقي"
+    "left": "متبقي",
+    "catalog": "القائمة",
+    "cartShort": "السلة",
+    "checkout": "الدفع",
+    "itemsInCart": "أصناف في السلة",
+    "viewCart": "عرض السلة"
   },
   "orders": {
     "title": "إدارة دورة حياة الطلب",

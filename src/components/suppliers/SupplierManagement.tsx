@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   ChevronRight,
   ClipboardList,
+  Printer,
 } from 'lucide-react';
 import { DatabaseService } from '@/services/db.service';
 import { useAuth } from '@/context/AuthContext';
@@ -29,6 +30,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { PrintPortal } from '@/components/print/PrintPortal';
+import { PrintableSupplierStatement } from '@/components/print/PrintableSupplierStatement';
 
 export function SupplierManagement() {
   const { t, i18n } = useTranslation();
@@ -621,7 +624,16 @@ export function SupplierManagement() {
                   </div>
                 )}
 
-                <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => window.print()}
+                    leftIcon={<Printer className="w-4 h-4" />}
+                    className="bg-resto-terracotta-600 hover:bg-resto-terracotta-500 text-white font-bold"
+                  >
+                    {isRtl ? 'طباعة كشف الحساب / حفظ PDF' : 'Print Statement / Save PDF'}
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -633,6 +645,11 @@ export function SupplierManagement() {
                     {t('common.close')}
                   </Button>
                 </div>
+
+                {/* Isolated Top-Level A4 Print Portal (Prints complete statement with all 3 tables) */}
+                <PrintPortal pageSize="a4" dir={isRtl ? 'rtl' : 'ltr'}>
+                  <PrintableSupplierStatement statement={statementData} />
+                </PrintPortal>
               </>
             ) : null}
           </div>

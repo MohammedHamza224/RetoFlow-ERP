@@ -13,6 +13,7 @@ import {
   Calendar,
   Layers,
   ChevronRight,
+  Printer,
 } from 'lucide-react';
 import { DatabaseService } from '@/services/db.service';
 import { useAuth } from '@/context/AuthContext';
@@ -24,6 +25,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { PrintableGoodsReceipt } from '@/components/print/PrintableGoodsReceipt';
 
 interface GoodsReceiptManagementProps {
   initialPurchaseId?: string;
@@ -312,9 +314,9 @@ export function GoodsReceiptManagement({ initialPurchaseId, onReceiptCreated }: 
                   <UserIcon className="w-3 h-3 text-slate-400" />
                   {rcpt.receiver?.name || t('goodsReceipts.authorizedStaff')}
                 </span>
-                <span className="text-emerald-600 font-bold flex items-center gap-0.5">
-                  {t('goodsReceipts.viewDetails')}
-                  <ChevronRight className="w-3.5 h-3.5" />
+                <span className="text-emerald-600 font-bold flex items-center gap-1">
+                  <Printer className="w-3.5 h-3.5" />
+                  {t('goodsReceipts.viewDetails')} / {t('common.print')}
                 </span>
               </CardFooter>
             </Card>
@@ -454,84 +456,18 @@ export function GoodsReceiptManagement({ initialPurchaseId, onReceiptCreated }: 
         </form>
       </Modal>
 
-      {/* View Receipt Details Modal */}
+      {/* View & Print Receipt Details Modal */}
       {selectedReceipt && (
         <Modal
           isOpen={!!selectedReceipt}
           onClose={() => setSelectedReceipt(null)}
-          title={`${t('goodsReceipts.receiptDetailsTitle')} — ${selectedReceipt.receipt_number}`}
-          description={t('goodsReceipts.receiptDetailsDesc')}
-          maxWidth="lg"
+          title=""
+          maxWidth="2xl"
         >
-          <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 gap-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <div>
-                <span className="text-slate-500 block">{t('suppliers.name')}:</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                  {selectedReceipt.supplier?.name}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">{t('goodsReceipts.poReference')}:</span>
-                <span className="font-mono font-bold text-resto-terracotta-600">
-                  {selectedReceipt.purchase?.invoice_number}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">{t('goodsReceipts.receivedDate')}:</span>
-                <span className="font-mono">
-                  {new Date(selectedReceipt.received_at).toLocaleString()}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">{t('goodsReceipts.receivedBy')}:</span>
-                <span className="font-bold">
-                  {selectedReceipt.receiver?.name || t('goodsReceipts.authorizedStaff')}
-                </span>
-              </div>
-            </div>
-
-            {selectedReceipt.notes && (
-              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <span className="text-slate-500 block mb-0.5">{t('common.notes')}:</span>
-                <p className="text-slate-700 dark:text-slate-300 italic">"{selectedReceipt.notes}"</p>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <span className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
-                {t('goodsReceipts.receivedItemsHeader')}
-              </span>
-              <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-x-auto">
-                <table className="w-full min-w-[500px] text-xs">
-                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-700">
-                    <tr>
-                      <th className="p-2.5 text-left">{t('purchases.product')}</th>
-                      <th className="p-2.5 text-center font-mono w-24">{t('goodsReceipts.qtyReceived')}</th>
-                      <th className="p-2.5 text-right font-mono w-28">{t('purchases.unitCost')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {(selectedReceipt.items || []).map(item => (
-                      <tr key={item.id}>
-                        <td className="p-2.5 font-medium">{item.product?.name || item.product_id}</td>
-                        <td className="p-2.5 text-center font-mono font-bold text-emerald-600">
-                          {item.quantity_received}
-                        </td>
-                        <td className="p-2.5 text-right font-mono">{formatCurrency(item.unit_cost)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
-              <Button variant="ghost" size="sm" onClick={() => setSelectedReceipt(null)}>
-                {t('common.close')}
-              </Button>
-            </div>
-          </div>
+          <PrintableGoodsReceipt
+            receipt={selectedReceipt}
+            onClose={() => setSelectedReceipt(null)}
+          />
         </Modal>
       )}
     </div>

@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Ban,
   ShieldAlert,
+  Printer,
 } from 'lucide-react';
 import { Order, OrderStatus, CancellationReason } from '@/types/database.types';
 import { formatCurrency } from '@/lib/utils';
@@ -22,6 +23,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { OrderCancelModal } from './OrderCancelModal';
 import { OrderRefundModal } from './OrderRefundModal';
+import { PrintableSalesInvoice } from '@/components/print/PrintableSalesInvoice';
 
 export interface OrderDetailsModalProps {
   isOpen: boolean;
@@ -47,6 +49,7 @@ export function OrderDetailsModal({
 
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [isPrintViewOpen, setIsPrintViewOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionError, setActionError] = useState('');
 
@@ -141,12 +144,22 @@ export function OrderDetailsModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={() => {
+        setIsPrintViewOpen(false);
+        onClose();
+      }}
       title={`${t('orders.orderDetailsTitle')} — ${order.order_number}`}
       description={t('orders.orderDetailsDesc')}
-      maxWidth="lg"
+      maxWidth={isPrintViewOpen ? '2xl' : 'lg'}
     >
-      <div className="space-y-6 py-2 select-none">
+      {isPrintViewOpen ? (
+        <PrintableSalesInvoice
+          order={order}
+          onClose={() => setIsPrintViewOpen(false)}
+          defaultSize="a4"
+        />
+      ) : (
+        <div className="space-y-6 py-2 select-none">
         {actionError && (
           <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-300 text-xs font-medium flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 shrink-0 text-red-500" />
@@ -335,7 +348,18 @@ export function OrderDetailsModal({
 
         {/* 5. Action Buttons Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Print Tax Invoice / Thermal Receipt Button */}
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => setIsPrintViewOpen(true)}
+              leftIcon={<Printer className="w-4 h-4 text-resto-terracotta-600" />}
+              className="font-bold"
+            >
+              {isRtl ? 'طباعة الفاتورة / الإيصال' : 'Print Invoice / Receipt'}
+            </Button>
+
             {/* Cancellation Action (Uncompleted Orders) */}
             {!isCompleted && !isCancelled && (
               <Button
@@ -378,6 +402,7 @@ export function OrderDetailsModal({
           )}
         </div>
       </div>
+      )}
 
       {/* Sub-Modals for Cancellation and Refund */}
       <OrderCancelModal

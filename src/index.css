@@ -125,8 +125,35 @@ input[type="submit"] {
   touch-action: manipulation;
 }
 
-/* Production Print Media Optimization (Receipts, Reports & Invoices) */
+/* Screen rule: Hide the dedicated print portal when viewing on screen */
+#restoflow-print-portal {
+  display: none;
+}
+
+/* Production Print Media Optimization (Receipts, Reports, Statements & Invoices) */
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* When a document is mounted in the isolated PrintPortal, hide the entire #root app shell */
+  body[data-print-active="true"] > #root {
+    display: none !important;
+  }
+
+  body[data-print-active="true"] > #restoflow-print-portal {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   aside,
   header,
   nav,
@@ -139,23 +166,42 @@ input[type="submit"] {
   html {
     background: #ffffff !important;
     color: #000000 !important;
-    font-size: 11pt !important;
+    font-size: 10.5pt !important;
     height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   main {
     padding: 0 !important;
     margin: 0 !important;
     overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Multipage Table & Summary Page-Break Rules */
+  table {
+    page-break-inside: auto;
+    border-collapse: collapse;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
+  }
+
+  tr,
+  .print-avoid-break {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 
   .print-only {
     display: block !important;
-  }
-
-  /* Thermal POS receipt & invoice page styling */
-  @page {
-    margin: 5mm;
   }
 }

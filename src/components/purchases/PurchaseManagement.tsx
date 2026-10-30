@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { PrintablePurchaseOrder } from '@/components/print/PrintablePurchaseOrder';
 
 interface PurchaseManagementProps {
   onNavigateToReceipts?: (purchaseId: string) => void;
@@ -354,12 +355,13 @@ export function PurchaseManagement({ onNavigateToReceipts, onNavigateToInvoices 
 
               <CardFooter className="pt-2.5 pb-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap justify-between items-center bg-slate-50/50 dark:bg-slate-900/20 gap-1.5">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => setSelectedPO(pur)}
-                  className="h-7 text-xs font-semibold px-2"
+                  leftIcon={<Printer className="w-3.5 h-3.5 text-resto-terracotta-600" />}
+                  className="h-7 text-xs font-bold px-2.5"
                 >
-                  {t('purchases.viewDetails')}
+                  {t('purchases.viewDetails')} / {t('common.print')}
                 </Button>
 
                 <div className="flex items-center gap-1">
@@ -599,72 +601,18 @@ export function PurchaseManagement({ onNavigateToReceipts, onNavigateToInvoices 
         </form>
       </Modal>
 
-      {/* View PO Details Modal */}
+      {/* View & Print PO Details Modal */}
       {selectedPO && (
         <Modal
           isOpen={!!selectedPO}
           onClose={() => setSelectedPO(null)}
-          title={`${t('purchases.poDetailsTitle')} — ${selectedPO.invoice_number}`}
-          maxWidth="lg"
+          title=""
+          maxWidth="2xl"
         >
-          <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 gap-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <div>
-                <span className="text-slate-500 block">{t('suppliers.name')}:</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                  {selectedPO.supplier?.name}
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-slate-500 block">{t('common.status')}:</span>
-                {getStatusBadge(selectedPO.status)}
-              </div>
-              <div>
-                <span className="text-slate-500 block">{t('purchases.orderDate')}:</span>
-                <span className="font-mono">{selectedPO.purchase_date}</span>
-              </div>
-              <div className="text-right">
-                <span className="text-slate-500 block">{t('purchases.totalCost')}:</span>
-                <span className="font-mono font-bold text-resto-terracotta-600 text-sm">
-                  {formatCurrency(selectedPO.total)}
-                </span>
-              </div>
-            </div>
-
-            {/* Line items table with ordered vs received */}
-            <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-x-auto">
-              <table className="w-full text-xs min-w-[500px]">
-                <thead className="bg-slate-100 dark:bg-slate-800 font-semibold border-b border-slate-200 dark:border-slate-700">
-                  <tr>
-                    <th className="p-2 text-left">{t('purchases.product')}</th>
-                    <th className="p-2 text-center font-mono w-16">{t('purchases.qty')}</th>
-                    <th className="p-2 text-center font-mono w-20">{t('goodsReceipts.qtyReceived')}</th>
-                    <th className="p-2 text-right font-mono w-24">{t('purchases.unitCost')}</th>
-                    <th className="p-2 text-right font-mono w-24">{t('purchases.totalCost')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {(selectedPO.items || []).map(item => (
-                    <tr key={item.id}>
-                      <td className="p-2 font-medium">{item.product?.name || item.product_id}</td>
-                      <td className="p-2 text-center font-mono font-bold">{item.quantity}</td>
-                      <td className="p-2 text-center font-mono text-emerald-600 font-bold">
-                        {item.received_quantity || 0}
-                      </td>
-                      <td className="p-2 text-right font-mono">{formatCurrency(item.unit_cost)}</td>
-                      <td className="p-2 text-right font-mono font-bold">{formatCurrency(item.total_cost)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
-              <Button variant="ghost" size="sm" onClick={() => setSelectedPO(null)}>
-                {t('common.close')}
-              </Button>
-            </div>
-          </div>
+          <PrintablePurchaseOrder
+            purchase={selectedPO}
+            onClose={() => setSelectedPO(null)}
+          />
         </Modal>
       )}
 

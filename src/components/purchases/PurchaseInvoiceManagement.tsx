@@ -369,7 +369,7 @@ export function PurchaseInvoiceManagement({ initialPurchaseId, onInvoiceCreated 
                     <span className="font-mono">{formatCurrency(inv.subtotal)}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500">{t('purchases.tax')} (15%)</span>
+                    <span className="text-slate-500">{t('purchases.tax')}</span>
                     <span className="font-mono">{formatCurrency(inv.tax)}</span>
                   </div>
 

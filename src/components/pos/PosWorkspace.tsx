@@ -225,7 +225,7 @@ export function PosWorkspace() {
           type="button"
           onClick={() => setActiveMobileTab('cart')}
           className={cn(
-            'flex-1 py-2 px-2 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 min-h-[42px] relative',
+            'flex-1 py-2 px-1.5 sm:px-2 rounded-lg text-center transition-all flex items-center justify-center gap-1 sm:gap-1.5 min-h-[42px] relative min-w-0',
             activeMobileTab === 'cart' || (activeMobileTab === 'catalog' && 'md:bg-resto-charcoal-800 md:text-white md:dark:bg-slate-700 md:shadow-sm')
               ? activeMobileTab === 'cart'
                 ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700 shadow-sm'
@@ -234,9 +234,10 @@ export function PosWorkspace() {
           )}
         >
           <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
-          <span>{t('pos.cartTitle') || 'Cart'}</span>
+          <span className="sm:hidden truncate">{t('pos.cartShort', 'Cart')}</span>
+          <span className="hidden sm:inline truncate">{t('pos.cartTitle', 'Cart')}</span>
           {cartItemCount > 0 && (
-            <span className="bg-resto-terracotta-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+            <span className="bg-resto-terracotta-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full shrink-0">
               {cartItemCount}
             </span>
           )}

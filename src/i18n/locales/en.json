@@ -34,6 +34,7 @@
     "reset": "Reset",
     "status": "Status",
     "all": "All",
+    "allStatuses": "All Statuses",
     "active": "Active",
     "inactive": "Inactive",
     "details": "Details",
@@ -41,7 +42,8 @@
     "retry": "Retry",
     "required": "Required",
     "close": "Close",
-    "back": "Back"
+    "back": "Back",
+    "print": "Print"
   },
   "auth": {
     "welcomeTitle": "Welcome Back",
@@ -147,7 +149,12 @@
     "walkInGuest": "Walk-in Guest",
     "noItemsMatch": "No items match your catalog search.",
     "totalPayable": "Total Payable:",
-    "left": "Left"
+    "left": "Left",
+    "catalog": "Menu",
+    "cartShort": "Cart",
+    "checkout": "Checkout",
+    "itemsInCart": "items in cart",
+    "viewCart": "View Cart"
   },
   "orders": {
     "title": "Order Lifecycle Management",
