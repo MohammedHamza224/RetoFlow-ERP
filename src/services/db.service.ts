@@ -2878,102 +2878,39 @@ export class DatabaseService {
     const trimmedEmail = payload.email.trim().toLowerCase();
     const trimmedName = payload.name.trim();
 
-    // 1. Try Supabase Edge Function first
-    try {
-      const { data: edgeData, error: edgeError } = await supabase.functions.invoke('admin-users', {
-        body: {
-          action: 'CREATE_USER',
-          payload: {
-            ...payload,
-            email: trimmedEmail,
-            name: trimmedName,
-          },
+    // 1. Invoke Supabase Edge Function (Secure server-side admin operation)
+    const { data: edgeData, error: edgeError } = await supabase.functions.invoke('admin-users', {
+      body: {
+        action: 'CREATE_USER',
+        payload: {
+          ...payload,
+          email: trimmedEmail,
+          name: trimmedName,
         },
-      });
+      },
+    });
 
-      if (!edgeError && edgeData?.success && edgeData?.user) {
-        serviceCache.invalidateUsers();
-        return edgeData.user;
+    if (edgeData?.success && edgeData?.user) {
+      serviceCache.invalidateUsers();
+      return (edgeData.user as unknown) as User;
+    }
+
+    if (edgeData?.error) {
+      throw new Error(edgeData.error);
+    }
+
+    if (edgeError) {
+      let errorMsg = edgeError.message;
+      if ((edgeError as any)?.context?.json) {
+        try {
+          const body = await (edgeError as any).context.json();
+          if (body?.error) errorMsg = body.error;
+        } catch (_) {}
       }
-
-      if (edgeData?.error) {
-        throw new Error(edgeData.error);
-      }
-    } catch (e: any) {
-      // If it's a known business/validation error from the edge function, re-throw it
-      if (e?.message && !e.message.includes('FunctionsHttpError') && !e.message.includes('Failed to send')) {
-        throw e;
-      }
-      console.warn('[DatabaseService] Edge function invocation skipped/fallback to direct flow:', e.message);
+      throw new Error(errorMsg || 'Failed to create user account. Please ensure the admin-users Edge Function is active.');
     }
 
-    // 2. Direct Supabase Database Flow (for standard Supabase setup)
-    const roles = await this.getRoles();
-    const targetRole = roles.find(r => r.name === payload.role_name);
-    if (!targetRole) {
-      throw new Error(`Invalid role: ${payload.role_name}`);
-    }
-
-    let authUserId: string | null = null;
-    let authErrorMsg: string | null = null;
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: trimmedEmail,
-        password: payload.password || 'demo123',
-        options: {
-          data: { name: trimmedName },
-        },
-      });
-
-      if (authError) {
-        authErrorMsg = authError.message;
-        console.warn('[DatabaseService] auth.signUp error:', authError.message);
-      }
-      if (authData?.user?.id) {
-        authUserId = authData.user.id;
-      }
-    } catch (authEx: any) {
-      authErrorMsg = authEx.message;
-      console.warn('[DatabaseService] Auth registration fallback:', authEx.message);
-    }
-
-    if (!authUserId) {
-      throw new Error(
-        authErrorMsg 
-          ? `Authentication registration failed: ${authErrorMsg}` 
-          : 'Failed to create user authentication account. Please ensure the admin-users Edge Function is deployed.'
-      );
-    }
-
-    const { data: insertedUser, error: insertError } = await supabase
-      .from('users')
-      .upsert({
-        id: authUserId,
-        role_id: targetRole.id,
-        name: trimmedName,
-        email: trimmedEmail,
-        phone: payload.phone ? payload.phone.trim() : null,
-        is_active: true,
-        updated_at: new Date().toISOString(),
-      })
-      .select('id, role_id, name, email, phone, is_active, created_at, updated_at, role:roles(id, name, description)')
-      .single();
-
-    if (insertError) {
-      throw new Error(`Failed to create user record: ${insertError.message}`);
-    }
-
-    // Record audit log
-    if (actingUserId) {
-      await this.logUserAudit(actingUserId, insertedUser.id, 'USER_CREATED', {
-        target_email: trimmedEmail,
-        target_role: payload.role_name,
-        actor_role: actingUserRole,
-      });
-    }
-
-    serviceCache.invalidateUsers();
-    return (insertedUser as unknown) as User;
+    throw new Error('Failed to create user account: unknown response from server.');
   }
 
   static async updateUser(

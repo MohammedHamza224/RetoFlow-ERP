@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bell, Globe, Search, LogOut, User } from 'lucide-react';
+import { Bell, Globe, Search, LogOut, User, Menu } from 'lucide-react';
 import { setAppLanguage } from '@/i18n/i18n';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -10,9 +10,10 @@ import { UserProfileModal } from '@/components/auth/UserProfileModal';
 
 export interface HeaderProps {
   activeTab: string;
+  onToggleMobileNav?: () => void;
 }
 
-export function Header({ activeTab }: HeaderProps) {
+export function Header({ activeTab, onToggleMobileNav }: HeaderProps) {
   const { t, i18n } = useTranslation();
   const { user, logout, switchDemoRole } = useAuth();
   const currentLang = i18n.language as 'en' | 'ar';
@@ -56,22 +57,31 @@ export function Header({ activeTab }: HeaderProps) {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-slate-200 dark:border-slate-800 px-4 lg:px-6 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-subtle">
-      {/* Page Title & Breadcrumb */}
-      <div className="flex items-center gap-3">
-        <h1 className="font-display text-xl font-bold text-resto-charcoal-900 dark:text-slate-100">
+    <header className="h-16 bg-card border-b border-slate-200 dark:border-slate-800 px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-20 shadow-subtle shrink-0">
+      {/* Left side: Mobile Hamburger + Page Title & Breadcrumb */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        {/* Mobile Hamburger Toggle Button (< lg) */}
+        <button
+          onClick={onToggleMobileNav}
+          className="lg:hidden h-10 w-10 flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 -ms-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
+          aria-label="Toggle navigation menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <h1 className="font-display text-base sm:text-lg lg:text-xl font-bold text-resto-charcoal-900 dark:text-slate-100 truncate">
           {getPageTitle(activeTab)}
         </h1>
-        <span className="text-slate-300 dark:text-slate-700 font-light hidden sm:inline">|</span>
-        <span className="text-xs text-muted-foreground hidden sm:inline">
+        <span className="text-slate-300 dark:text-slate-700 font-light hidden md:inline">|</span>
+        <span className="text-xs text-muted-foreground hidden md:inline truncate">
           {t('brand.name')} &bull; {isRtl ? 'نقطة بيع 01' : 'Terminal 01'}
         </span>
       </div>
 
-      {/* Global Search & User Bar */}
-      <div className="flex items-center gap-3">
-        {/* Search Input */}
-        <div className="hidden md:block w-64">
+      {/* Right side: Global Search, Quick Role Switcher, Language & Profile Bar */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        {/* Search Input (Hidden on mobile/tablet) */}
+        <div className="hidden xl:block w-56">
           <Input
             placeholder={t('header.search')}
             leftIcon={<Search className="w-4 h-4" />}
@@ -79,8 +89,8 @@ export function Header({ activeTab }: HeaderProps) {
           />
         </div>
 
-        {/* Quick Role Switcher Dropdown for Testing */}
-        <div className="hidden sm:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs font-semibold">
+        {/* Quick Role Switcher Dropdown for Testing (Desktop & Tablet Landscape) */}
+        <div className="hidden lg:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs font-semibold">
           {(['ADMIN', 'MANAGER', 'CASHIER', 'STAFF'] as const).map((r) => (
             <button
               key={r}
@@ -101,29 +111,32 @@ export function Header({ activeTab }: HeaderProps) {
           variant="outline"
           size="sm"
           onClick={toggleLanguage}
-          leftIcon={<Globe className="w-4 h-4 text-resto-terracotta-600" />}
-          className="h-9 px-3 text-xs font-semibold"
+          leftIcon={<Globe className="w-3.5 h-3.5 text-resto-terracotta-600 shrink-0" />}
+          className="h-9 px-2 sm:px-3 text-xs font-semibold shrink-0"
         >
-          {currentLang === 'en' ? 'العربية (AR)' : 'English (EN)'}
+          <span className="hidden sm:inline">{currentLang === 'en' ? 'العربية (AR)' : 'English (EN)'}</span>
+          <span className="sm:hidden font-bold">{currentLang === 'en' ? 'AR' : 'EN'}</span>
         </Button>
 
         {/* Notification Bell */}
         <button
-          className="relative p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+          className="relative h-9 w-9 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0"
           title={t('header.notifications')}
+          aria-label={t('header.notifications')}
         >
-          <Bell className="w-5 h-5" />
+          <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-resto-terracotta-600 ring-2 ring-white dark:ring-slate-900" />
         </button>
 
         {/* Authenticated User Profile Badge & Logout */}
-        <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 ps-1 sm:ps-2 border-s border-slate-200 dark:border-slate-800">
           <button
             onClick={() => setIsProfileModalOpen(true)}
-            className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="flex items-center gap-2 text-start hover:opacity-80 transition-opacity p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
             title={isRtl ? 'تعديل الملف الشخصي' : 'Edit User Profile'}
+            aria-label="User Profile"
           >
-            <div className="w-9 h-9 rounded-full bg-resto-charcoal-800 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0 border border-slate-700 font-mono">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-resto-charcoal-800 text-white font-bold flex items-center justify-center text-xs sm:text-sm shadow-sm shrink-0 border border-slate-700 font-mono">
               {user?.name?.charAt(0) || 'U'}
             </div>
             <div className="hidden xl:flex flex-col">
@@ -142,8 +155,9 @@ export function Header({ activeTab }: HeaderProps) {
             variant="ghost"
             size="icon"
             onClick={() => logout()}
-            className="h-8 w-8 text-slate-400 hover:text-red-600 rounded-lg"
+            className="h-8 w-8 text-slate-400 hover:text-red-600 rounded-lg shrink-0"
             title={t('nav.logout')}
+            aria-label={t('nav.logout')}
           >
             <LogOut className="w-4 h-4" />
           </Button>

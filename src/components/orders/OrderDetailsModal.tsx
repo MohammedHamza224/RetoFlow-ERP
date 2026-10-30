@@ -160,13 +160,13 @@ export function OrderDetailsModal({
             <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500">
               {t('orders.lifecycleProgression')}
             </h5>
-            <div className="grid grid-cols-5 gap-1.5 text-center">
+            <div className="grid grid-cols-5 gap-1 text-center">
               {lifecycleSteps.map((step, idx) => {
                 const isPassed = currentStepIndex >= idx;
                 const isCurrent = currentStepIndex === idx;
 
                 return (
-                  <div key={step.key} className="space-y-1.5">
+                  <div key={step.key} className="space-y-1">
                     <div
                       className={`h-2 rounded-full transition-all ${
                         isCurrent
@@ -177,7 +177,7 @@ export function OrderDetailsModal({
                       }`}
                     />
                     <span
-                      className={`text-[10px] font-bold block leading-tight ${
+                      className={`text-[8.5px] sm:text-[10px] font-bold block leading-tight break-words ${
                         isCurrent
                           ? 'text-resto-terracotta-600 font-extrabold'
                           : isPassed

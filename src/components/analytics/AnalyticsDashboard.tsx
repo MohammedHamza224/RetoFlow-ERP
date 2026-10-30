@@ -372,7 +372,7 @@ export function AnalyticsDashboard() {
       {/* Loading Skeletons */}
       {isLoading && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <Skeleton key={i} className="h-28 rounded-xl" />
             ))}
@@ -388,104 +388,104 @@ export function AnalyticsDashboard() {
       {!isLoading && metrics && breakdown && (
         <>
           {/* Top 6 KPI Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
-              <CardContent className="p-4 space-y-1">
+              <CardContent className="p-3.5 sm:p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">
                     {t('analytics.revenue')}
                   </span>
                   <DollarSign className="w-4 h-4 text-emerald-500" />
                 </div>
-                <div className="text-lg font-extrabold font-display text-emerald-600 dark:text-emerald-400">
+                <div className="text-base sm:text-lg font-extrabold font-display text-emerald-600 dark:text-emerald-400 truncate">
                   {formatCurrency(metrics.total_revenue)}
                 </div>
-                <span className="text-[9px] text-slate-400 block">
+                <span className="text-[9px] text-slate-400 block truncate">
                   {isRtl ? 'خافض للاستردادات' : 'Refunds Deducted'}
                 </span>
               </CardContent>
             </Card>
 
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
-              <CardContent className="p-4 space-y-1">
+              <CardContent className="p-3.5 sm:p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">
                     {t('analytics.completedOrders')}
                   </span>
                   <ShoppingBag className="w-4 h-4 text-blue-500" />
                 </div>
-                <div className="text-lg font-extrabold font-display text-slate-900 dark:text-slate-100">
+                <div className="text-base sm:text-lg font-extrabold font-display text-slate-900 dark:text-slate-100 truncate">
                   {metrics.completed_orders_count}
                 </div>
-                <span className="text-[9px] text-slate-400 block">
+                <span className="text-[9px] text-slate-400 block truncate">
                   {isRtl ? 'مبيعات منفذة' : 'Fulfilled Sales'}
                 </span>
               </CardContent>
             </Card>
 
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
-              <CardContent className="p-4 space-y-1">
+              <CardContent className="p-3.5 sm:p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">
                     {t('analytics.avgOrderValue')}
                   </span>
                   <TrendingUp className="w-4 h-4 text-amber-500" />
                 </div>
-                <div className="text-lg font-extrabold font-display text-slate-900 dark:text-slate-100">
+                <div className="text-base sm:text-lg font-extrabold font-display text-slate-900 dark:text-slate-100 truncate">
                   {formatCurrency(metrics.average_order_value)}
                 </div>
-                <span className="text-[9px] text-slate-400 block">
+                <span className="text-[9px] text-slate-400 block truncate">
                   {isRtl ? 'لكل تذكرة مبيعات' : 'Per Completed Ticket'}
                 </span>
               </CardContent>
             </Card>
 
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
-              <CardContent className="p-4 space-y-1">
+              <CardContent className="p-3.5 sm:p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">
                     {t('analytics.grossProfit')}
                   </span>
                   <ArrowUpRight className="w-4 h-4 text-resto-terracotta-600" />
                 </div>
-                <div className="text-lg font-extrabold font-display text-resto-terracotta-600">
+                <div className="text-base sm:text-lg font-extrabold font-display text-resto-terracotta-600 truncate">
                   {formatCurrency(metrics.gross_profit)}
                 </div>
-                <span className="text-[9px] text-slate-400 block">
+                <span className="text-[9px] text-slate-400 block truncate">
                   {isRtl ? 'تكلفة تاريخية' : 'Historical Unit Cost'}
                 </span>
               </CardContent>
             </Card>
 
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
-              <CardContent className="p-4 space-y-1">
+              <CardContent className="p-3.5 sm:p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">
                     {t('analytics.cancellationRate')}
                   </span>
                   <Percent className="w-4 h-4 text-red-500" />
                 </div>
-                <div className="text-lg font-extrabold font-display text-red-600 dark:text-red-400">
+                <div className="text-base sm:text-lg font-extrabold font-display text-red-600 dark:text-red-400 truncate">
                   {metrics.cancellation_rate}%
                 </div>
-                <span className="text-[9px] text-slate-400 block">
+                <span className="text-[9px] text-slate-400 block truncate">
                   {metrics.cancelled_orders_count} {isRtl ? 'طلب ملغى' : 'Orders Cancelled'}
                 </span>
               </CardContent>
             </Card>
 
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
-              <CardContent className="p-4 space-y-1">
+              <CardContent className="p-3.5 sm:p-4 space-y-1">
                 <div className="flex items-center justify-between text-slate-400">
                   <span className="text-[10px] font-bold uppercase tracking-wider">
                     {isRtl ? 'أصناف منخفضة المخزون' : 'Low Stock Items'}
                   </span>
                   <AlertTriangle className="w-4 h-4 text-amber-500" />
                 </div>
-                <div className="text-lg font-extrabold font-display text-amber-600 dark:text-amber-400">
+                <div className="text-base sm:text-lg font-extrabold font-display text-amber-600 dark:text-amber-400 truncate">
                   {metrics.inventory_low_stock_count}
                 </div>
-                <span className="text-[9px] text-slate-400 block">
+                <span className="text-[9px] text-slate-400 block truncate">
                   {isRtl ? 'تحتاج إعادة طلب' : 'Requires Reorder'}
                 </span>
               </CardContent>
@@ -497,9 +497,9 @@ export function AnalyticsDashboard() {
             {/* Revenue & Gross Profit Time Series Trend Chart */}
             <Card className="bg-card border border-slate-200 dark:border-slate-800 md:col-span-2">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center justify-between">
+                <CardTitle className="text-sm font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span>{isRtl ? 'اتجاه الإيرادات وأداء إجمالي الربح' : 'Revenue & Gross Profit Performance Trend'}</span>
-                  <Badge variant="success" className="text-[10px]">
+                  <Badge variant="success" className="text-[10px] w-fit">
                     {isRtl ? 'هامش تاريخي مراعي للاستردادات' : 'Refund-Aware Historical Margin'}
                   </Badge>
                 </CardTitle>
@@ -527,9 +527,9 @@ export function AnalyticsDashboard() {
             {/* Top Selling Products Bar Chart */}
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center justify-between">
+                <CardTitle className="text-sm font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span>{isRtl ? 'أعلى منتجات القائمة مبيعاً' : 'Top Performing Menu Products'}</span>
-                  <Badge variant="info" className="text-[10px]">
+                  <Badge variant="info" className="text-[10px] w-fit">
                     {isRtl ? 'الوحدات المباعة' : 'Units Sold'}
                   </Badge>
                 </CardTitle>
@@ -556,9 +556,9 @@ export function AnalyticsDashboard() {
             {/* Category Performance Bar Chart */}
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center justify-between">
+                <CardTitle className="text-sm font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span>{isRtl ? 'توزيع الإيرادات حسب التصنيف' : 'Category Revenue Breakdown'}</span>
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-[10px] w-fit">
                     {isRtl ? 'تصنيفات القائمة' : 'Menu Categories'}
                   </Badge>
                 </CardTitle>
@@ -585,24 +585,24 @@ export function AnalyticsDashboard() {
             {/* Payment Method Analysis Section */}
             <Card className="bg-card border border-slate-200 dark:border-slate-800 md:col-span-2">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center justify-between">
+                <CardTitle className="text-sm font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span>{isRtl ? 'تحليل طرق الدفع' : 'Payment Method Analysis'}</span>
-                  <Badge variant="info" className="text-[10px]">
+                  <Badge variant="info" className="text-[10px] w-fit">
                     {isRtl ? 'المدفوعات المكتملة' : 'Completed Payments'}
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-2">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
                   {(breakdown.payment_methods || []).map((pm: any, idx: number) => (
                     <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block truncate">
                         {translatePaymentMethod(pm.method)}
                       </span>
-                      <span className="text-sm font-extrabold font-display text-slate-900 dark:text-slate-100 block">
+                      <span className="text-xs sm:text-sm font-extrabold font-display text-slate-900 dark:text-slate-100 block truncate">
                         {formatCurrency(pm.amount)}
                       </span>
-                      <span className="text-[9px] text-slate-400 block">
+                      <span className="text-[9px] text-slate-400 block truncate">
                         {pm.count} {isRtl ? 'عملية' : 'Transactions'}
                       </span>
                     </div>
@@ -614,9 +614,9 @@ export function AnalyticsDashboard() {
             {/* Order Status Distribution Pie Chart */}
             <Card className="bg-card border border-slate-200 dark:border-slate-800">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center justify-between">
+                <CardTitle className="text-sm font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span>{isRtl ? 'توزيع دورة حياة الطلبات' : 'Order Lifecycle Distribution'}</span>
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-[10px] w-fit">
                     {isRtl ? 'حالات الطلب' : 'Status Mix'}
                   </Badge>
                 </CardTitle>

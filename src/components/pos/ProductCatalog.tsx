@@ -53,7 +53,7 @@ export const ProductCatalog = React.memo(function ProductCatalog({ products, cat
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           <button
             onClick={() => setSelectedCategory('ALL')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+            className={`px-3.5 py-1.5 min-h-[38px] shrink-0 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
               selectedCategory === 'ALL'
                 ? 'bg-resto-terracotta-600 text-white border-resto-terracotta-500 shadow-sm'
                 : 'bg-card text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100'
@@ -65,7 +65,7 @@ export const ProductCatalog = React.memo(function ProductCatalog({ products, cat
             <button
               key={c.id}
               onClick={() => setSelectedCategory(c.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+              className={`px-3.5 py-1.5 min-h-[38px] shrink-0 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                 selectedCategory === c.id
                   ? 'bg-resto-terracotta-600 text-white border-resto-terracotta-500 shadow-sm'
                   : 'bg-card text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100'
@@ -85,7 +85,7 @@ export const ProductCatalog = React.memo(function ProductCatalog({ products, cat
             <p className="text-xs font-medium text-slate-500">No items match your catalog search.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-3 gap-2 sm:gap-3">
             {filteredProducts.map(product => {
               const isOutOfStock = product.stock_quantity === 0;
               const isLowStock = product.stock_quantity > 0 && product.stock_quantity <= product.minimum_stock;

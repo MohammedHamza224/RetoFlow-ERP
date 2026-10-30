@@ -47,30 +47,36 @@ export function Modal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
         className={cn(
-          'relative w-full bg-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-elevated overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200',
+          'relative w-full bg-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-elevated overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] animate-in zoom-in-95 duration-200',
           maxWidthes[maxWidth]
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
-          <div>
-            <h3 className="font-display text-lg font-bold text-resto-charcoal-900 dark:text-slate-100">{title}</h3>
-            {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="min-w-0 pr-2">
+            <h3 className="font-display text-base sm:text-lg font-bold text-resto-charcoal-900 dark:text-slate-100 truncate">{title}</h3>
+            {description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{description}</p>}
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 rounded-full">
-            <X className="w-4 h-4" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose} 
+            className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center shrink-0 -mr-2"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" />
           </Button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">{children}</div>
+        <div className="p-4 sm:p-6 overflow-y-auto overscroll-contain flex-1">{children}</div>
 
         {/* Footer */}
         {footer && (
-          <div className="p-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+          <div className="p-3 sm:p-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2 sm:gap-3 flex-wrap">
             {footer}
           </div>
         )}

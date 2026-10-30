@@ -631,8 +631,8 @@ export function PurchaseManagement({ onNavigateToReceipts, onNavigateToInvoices 
             </div>
 
             {/* Line items table with ordered vs received */}
-            <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
-              <table className="w-full text-xs">
+            <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-x-auto">
+              <table className="w-full text-xs min-w-[500px]">
                 <thead className="bg-slate-100 dark:bg-slate-800 font-semibold border-b border-slate-200 dark:border-slate-700">
                   <tr>
                     <th className="p-2 text-left">{t('purchases.product')}</th>

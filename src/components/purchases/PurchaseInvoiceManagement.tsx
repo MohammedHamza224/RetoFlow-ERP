@@ -491,8 +491,8 @@ export function PurchaseInvoiceManagement({ initialPurchaseId, onInvoiceCreated 
                 </span>
               </div>
 
-              <div className="max-h-48 overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-lg">
-                <table className="w-full text-xs text-left">
+              <div className="max-h-48 overflow-y-auto overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+                <table className="w-full min-w-[500px] text-xs text-left">
                   <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold sticky top-0">
                     <tr>
                       <th className="p-2 text-left">#</th>

@@ -82,15 +82,15 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-screen flex flex-col lg:flex-row bg-resto-charcoal-950 text-slate-100 overflow-hidden font-sans select-none">
+    <div className="min-h-screen w-screen flex flex-col lg:flex-row bg-resto-charcoal-950 text-slate-100 overflow-x-hidden font-sans select-none">
       
       {/* ------------------------------------------------------------------ */}
       {/* LEFT COLUMN / FORM SIDE: Minimal, Clean & Professional Login      */}
       {/* ------------------------------------------------------------------ */}
-      <div className="w-full lg:w-5/12 xl:w-4/12 flex flex-col justify-between p-6 sm:p-10 lg:p-12 bg-resto-charcoal-950 border-r border-resto-charcoal-800/60 z-20">
+      <div className="w-full lg:w-5/12 xl:w-4/12 flex flex-col justify-between p-5 sm:p-8 lg:p-12 bg-resto-charcoal-950 border-r border-resto-charcoal-800/60 z-20 min-h-screen lg:min-h-full overflow-y-auto">
         
         {/* Top Header Bar with Language Switcher */}
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-resto-terracotta-600 to-resto-terracotta-500 flex items-center justify-center text-white shadow-md shrink-0">
               <ChefHat className="w-5 h-5" />
@@ -105,14 +105,14 @@ export function LoginPage() {
             size="sm"
             onClick={toggleLanguage}
             leftIcon={<Globe className="w-4 h-4 text-resto-terracotta-500" />}
-            className="text-slate-400 hover:text-white text-xs font-semibold hover:bg-resto-charcoal-900"
+            className="text-slate-400 hover:text-white text-xs font-semibold hover:bg-resto-charcoal-900 min-h-[40px] px-3"
           >
             {isRtl ? 'English (EN)' : 'العربية (AR)'}
           </Button>
         </div>
 
         {/* Form Body */}
-        <div className="my-auto py-8 space-y-7">
+        <div className="my-auto py-6 sm:py-8 space-y-6 sm:space-y-7">
           <div className="space-y-2">
             <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               {isRtl ? 'مرحبا بكم 👋' : 'Welcome Back 👋'}
@@ -127,7 +127,7 @@ export function LoginPage() {
             <span className="text-[11px] text-slate-400 font-medium block">
               {t('auth.selectAccount')}
             </span>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {(['ADMIN', 'MANAGER', 'CASHIER', 'STAFF'] as UserRole[]).map((r) => {
                 const roleLabelMap: Record<UserRole, string> = {
                   ADMIN: isRtl ? 'مسؤول النظام' : 'ADMIN',
@@ -140,10 +140,10 @@ export function LoginPage() {
                     key={r}
                     type="button"
                     onClick={() => handleRoleSelect(r)}
-                    className={`py-1.5 px-1.5 rounded-lg text-[11px] font-bold transition-all border ${
+                    className={`py-2 px-2 rounded-lg text-xs font-bold transition-all border min-h-[44px] flex items-center justify-center text-center ${
                       selectedRole === r
                         ? 'bg-resto-terracotta-600 text-white border-resto-terracotta-500 shadow-sm'
-                        : 'bg-resto-charcoal-800 text-slate-400 border-slate-700/60 hover:text-slate-200'
+                        : 'bg-resto-charcoal-800 text-slate-400 border-slate-700/60 hover:text-slate-200 hover:bg-resto-charcoal-700/80'
                     }`}
                   >
                     {roleLabelMap[r]}

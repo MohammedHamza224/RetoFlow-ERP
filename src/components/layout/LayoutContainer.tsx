@@ -20,24 +20,30 @@ export function LayoutContainer({
   onTabChange,
 }: LayoutContainerProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-resto-charcoal-50 dark:bg-slate-950 font-sans">
-      {/* Sidebar */}
+      {/* Sidebar & Mobile Slide-over Drawer */}
       <Sidebar
         activeTab={activeTab}
         onTabChange={onTabChange}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isMobileOpen={isMobileNavOpen}
+        onCloseMobile={() => setIsMobileNavOpen(false)}
       />
 
       {/* Main Body */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header */}
-        <Header activeTab={activeTab} />
+        {/* Header with Hamburger Toggle */}
+        <Header
+          activeTab={activeTab}
+          onToggleMobileNav={() => setIsMobileNavOpen(prev => !prev)}
+        />
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 pb-safe">
           {children}
         </main>
       </div>

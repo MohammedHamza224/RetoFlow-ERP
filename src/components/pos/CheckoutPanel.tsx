@@ -163,7 +163,7 @@ export const CheckoutPanel = React.memo(function CheckoutPanel({
                 setOrderType(type);
                 setCheckoutError('');
               }}
-              className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all border ${
+              className={`py-2 px-2 min-h-[40px] flex items-center justify-center rounded-lg text-xs font-bold transition-all border ${
                 orderType === type
                   ? 'bg-resto-terracotta-600 text-white border-resto-terracotta-500 shadow-sm'
                   : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'
@@ -224,7 +224,7 @@ export const CheckoutPanel = React.memo(function CheckoutPanel({
                   key={method}
                   type="button"
                   onClick={() => setSingleMethod(method)}
-                  className={`py-2 px-1 rounded-lg text-xs font-bold transition-all border ${
+                  className={`py-2 px-1 min-h-[40px] flex items-center justify-center rounded-lg text-xs font-bold transition-all border ${
                     singleMethod === method
                       ? 'bg-resto-charcoal-800 text-white border-resto-charcoal-700 shadow-sm'
                       : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'

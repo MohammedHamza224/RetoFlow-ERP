@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Utensils, ShoppingCart, CreditCard, ArrowRight } from 'lucide-react';
 import { DatabaseService } from '@/services/db.service';
 import { useAuth } from '@/context/AuthContext';
 import { Product, Category, Customer, RestaurantTable } from '@/types/database.types';
 import { calculateOrderTotals, DEFAULT_VAT_RATE } from '@/config/tax.config';
+import { formatCurrency, cn } from '@/lib/utils';
 import { ProductCatalog } from './ProductCatalog';
 import { CartPanel, CartItem } from './CartPanel';
 import { CheckoutPanel, PaymentSplitRow } from './CheckoutPanel';
@@ -13,6 +15,9 @@ import { Skeleton } from '@/components/ui/Skeleton';
 export function PosWorkspace() {
   const { t } = useTranslation();
   const { user } = useAuth();
+
+  // Mobile / Tablet Panel Switcher State ('catalog' | 'cart' | 'checkout')
+  const [activeMobileTab, setActiveMobileTab] = useState<'catalog' | 'cart' | 'checkout'>('catalog');
 
   // Instant Synchronous Cache Initialization for 0ms Instant Render
   const cachedProds = DatabaseService.getCachedProductsSync();
@@ -185,6 +190,8 @@ export function PosWorkspace() {
     }
   }, [cart, orderDiscount, user, customers, tables, totals, handleClearCart, loadPosData]);
 
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-6rem)]">
@@ -196,38 +203,136 @@ export function PosWorkspace() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-6.5rem)] min-h-[600px] select-none">
-      {/* LEFT: Product Catalog (5 cols) */}
-      <div className="lg:col-span-5 h-full overflow-hidden">
-        <ProductCatalog
-          products={products}
-          categories={categories}
-          onAddToCart={handleAddToCart}
-        />
+    <div className="flex flex-col h-[calc(100vh-6.5rem)] min-h-[500px] select-none">
+      {/* Mobile / Tablet View Switcher Tab Bar (< lg) */}
+      <div className="lg:hidden flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-3 text-xs font-bold shrink-0 border border-slate-200 dark:border-slate-700">
+        <button
+          type="button"
+          onClick={() => setActiveMobileTab('catalog')}
+          className={cn(
+            'flex-1 py-2 px-2 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 min-h-[40px]',
+            activeMobileTab === 'catalog'
+              ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+          )}
+        >
+          <Utensils className="w-3.5 h-3.5 shrink-0" />
+          <span>{t('pos.catalog') || 'Catalog'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveMobileTab('cart')}
+          className={cn(
+            'flex-1 py-2 px-2 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 min-h-[40px] relative',
+            activeMobileTab === 'cart'
+              ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+          )}
+        >
+          <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
+          <span>{t('pos.cartTitle') || 'Cart'}</span>
+          {cartItemCount > 0 && (
+            <span className="bg-resto-terracotta-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+              {cartItemCount}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveMobileTab('checkout')}
+          className={cn(
+            'flex-1 py-2 px-2 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 min-h-[40px]',
+            activeMobileTab === 'checkout'
+              ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700 shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+          )}
+        >
+          <CreditCard className="w-3.5 h-3.5 shrink-0" />
+          <span>{t('pos.checkout') || 'Checkout'}</span>
+          {totals.total > 0 && (
+            <span className="text-[10px] font-mono opacity-80 hidden sm:inline">
+              ({formatCurrency(totals.total)})
+            </span>
+          )}
+        </button>
       </div>
 
-      {/* CENTER: Shopping Cart (4 cols) */}
-      <div className="lg:col-span-4 h-full overflow-hidden">
-        <CartPanel
-          cart={cart}
-          orderDiscount={orderDiscount}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-          onClearCart={handleClearCart}
-          onUpdateDiscount={setOrderDiscount}
-        />
+      {/* POS Panels Grid (Desktop: 12 Cols / Mobile: Active Tab Display) */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* LEFT: Product Catalog (5 cols on Desktop) */}
+        <div
+          className={cn(
+            'h-full overflow-hidden lg:col-span-5',
+            activeMobileTab === 'catalog' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'
+          )}
+        >
+          <ProductCatalog
+            products={products}
+            categories={categories}
+            onAddToCart={handleAddToCart}
+          />
+        </div>
+
+        {/* CENTER: Shopping Cart (4 cols on Desktop) */}
+        <div
+          className={cn(
+            'h-full overflow-hidden lg:col-span-4',
+            activeMobileTab === 'cart' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'
+          )}
+        >
+          <CartPanel
+            cart={cart}
+            orderDiscount={orderDiscount}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onClearCart={handleClearCart}
+            onUpdateDiscount={setOrderDiscount}
+          />
+        </div>
+
+        {/* RIGHT: Customer & Checkout Panel (3 cols on Desktop) */}
+        <div
+          className={cn(
+            'h-full overflow-hidden lg:col-span-3',
+            activeMobileTab === 'checkout' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'
+          )}
+        >
+          <CheckoutPanel
+            orderTotal={totals.total}
+            customers={customers}
+            tables={tables}
+            onCompleteCheckout={handleCompleteCheckout}
+            isSubmitting={isSubmitting}
+          />
+        </div>
       </div>
 
-      {/* RIGHT: Customer & Checkout Panel (3 cols) */}
-      <div className="lg:col-span-3 h-full overflow-hidden">
-        <CheckoutPanel
-          orderTotal={totals.total}
-          customers={customers}
-          tables={tables}
-          onCompleteCheckout={handleCompleteCheckout}
-          isSubmitting={isSubmitting}
-        />
-      </div>
+      {/* Mobile Floating Quick Bar (Appears when Catalog tab is active and Cart has items) */}
+      {activeMobileTab === 'catalog' && cartItemCount > 0 && (
+        <div className="lg:hidden sticky bottom-2 z-20 pt-2 pb-safe">
+          <button
+            type="button"
+            onClick={() => setActiveMobileTab('cart')}
+            className="w-full bg-resto-terracotta-600 hover:bg-resto-terracotta-500 text-white p-3.5 rounded-xl shadow-elevated flex items-center justify-between font-bold text-xs sm:text-sm animate-in slide-in-from-bottom-2 duration-200"
+          >
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+              <span>
+                {cartItemCount} {t('pos.itemsInCart') || 'items'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono">{formatCurrency(totals.total)}</span>
+              <span className="text-[11px] font-semibold underline underline-offset-2 flex items-center gap-1">
+                {t('pos.viewCart') || 'View Cart'}
+                <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+              </span>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Success Modal & Thermal Receipt */}
       <OrderSuccessModal

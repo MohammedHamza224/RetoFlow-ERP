@@ -374,7 +374,7 @@ export function UserManagement() {
       </div>
 
       {/* Summary KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="p-4 rounded-xl bg-card border border-slate-200 dark:border-slate-800 shadow-subtle flex flex-col">
           <span className="text-xs text-slate-500 font-medium">{t('users.totalUsers')}</span>
           <span className="text-2xl font-bold mt-1 text-slate-900 dark:text-slate-100">
@@ -503,7 +503,7 @@ export function UserManagement() {
       {!isLoading && filteredUsers.length > 0 && (
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-card overflow-hidden shadow-subtle">
           <div className="overflow-x-auto">
-            <table className="w-full text-start text-xs border-collapse">
+            <table className="w-full min-w-[650px] text-start text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold">
                   <th className="py-3 px-4 text-start">{t('users.colUser')}</th>

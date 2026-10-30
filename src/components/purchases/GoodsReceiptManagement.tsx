@@ -372,7 +372,7 @@ export function GoodsReceiptManagement({ initialPurchaseId, onReceiptCreated }: 
               </span>
 
               <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
-                <table className="w-full text-xs text-left">
+                <table className="w-full min-w-[500px] text-xs text-left">
                   <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
                     <tr>
                       <th className="p-2.5 text-left">{t('purchases.product')}</th>
@@ -502,8 +502,8 @@ export function GoodsReceiptManagement({ initialPurchaseId, onReceiptCreated }: 
               <span className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
                 {t('goodsReceipts.receivedItemsHeader')}
               </span>
-              <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
-                <table className="w-full text-xs">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-x-auto">
+                <table className="w-full min-w-[500px] text-xs">
                   <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-700">
                     <tr>
                       <th className="p-2.5 text-left">{t('purchases.product')}</th>

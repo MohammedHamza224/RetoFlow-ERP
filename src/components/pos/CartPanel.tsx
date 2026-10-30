@@ -89,21 +89,23 @@ export const CartPanel = React.memo(function CartPanel({
                 <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
                   <button
                     onClick={() => onUpdateQuantity(product.id, -1)}
-                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300"
+                    className="h-8 w-8 min-h-[32px] min-w-[32px] flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300"
+                    aria-label="Decrease quantity"
                   >
-                    <Minus className="w-3 h-3" />
+                    <Minus className="w-3.5 h-3.5" />
                   </button>
                   <span className="w-6 text-center text-xs font-bold">{quantity}</span>
                   <button
                     onClick={() => onUpdateQuantity(product.id, 1)}
                     disabled={isStockMax}
-                    className={`p-1 rounded transition-colors ${
+                    className={`h-8 w-8 min-h-[32px] min-w-[32px] flex items-center justify-center rounded transition-colors ${
                       isStockMax
                         ? 'opacity-40 cursor-not-allowed text-slate-400'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
                     }`}
+                    aria-label="Increase quantity"
                   >
-                    <Plus className="w-3 h-3" />
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
@@ -114,9 +116,10 @@ export const CartPanel = React.memo(function CartPanel({
                   </span>
                   <button
                     onClick={() => onRemoveItem(product.id)}
-                    className="text-slate-400 hover:text-red-600 p-1"
+                    className="text-slate-400 hover:text-red-600 p-2 min-h-[32px] min-w-[32px] flex items-center justify-center rounded"
+                    aria-label="Remove item"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>

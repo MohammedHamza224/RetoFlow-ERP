@@ -100,3 +100,60 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-slate-400 dark:bg-slate-600;
 }
+
+/* Safe Area Inset Support for Notched Mobile Screens (iPhone / Android) */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Touch manipulation & prevent double-tap zoom on UI buttons */
+button, 
+[role="button"], 
+input[type="button"], 
+input[type="submit"] {
+  touch-action: manipulation;
+}
+
+/* Production Print Media Optimization (Receipts, Reports & Invoices) */
+@media print {
+  aside,
+  header,
+  nav,
+  .no-print,
+  button,
+  .fixed.inset-0.bg-slate-950\/60,
+  .fixed.inset-0.bg-black\/50 {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* Thermal POS receipt page styling */
+  @page {
+    margin: 5mm;
+  }
+}

@@ -24,13 +24,13 @@ export function SupplierView() {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Sub Tab Switcher */}
-      <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-800/60 p-1.5 rounded-xl w-fit text-xs font-semibold select-none border border-slate-200 dark:border-slate-800">
+      <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/60 p-1.5 rounded-xl w-full sm:w-fit overflow-x-auto scrollbar-none text-xs font-semibold select-none border border-slate-200 dark:border-slate-800 shrink-0">
         <button
           onClick={() => {
             setActivePurchaseId(undefined);
             setSubTab('suppliers');
           }}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] shrink-0 whitespace-nowrap rounded-lg transition-all ${
             subTab === 'suppliers'
               ? 'bg-resto-charcoal-800 text-white shadow-sm dark:bg-slate-700 font-bold'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -45,7 +45,7 @@ export function SupplierView() {
             setActivePurchaseId(undefined);
             setSubTab('purchases');
           }}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] shrink-0 whitespace-nowrap rounded-lg transition-all ${
             subTab === 'purchases'
               ? 'bg-resto-charcoal-800 text-white shadow-sm dark:bg-slate-700 font-bold'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -60,7 +60,7 @@ export function SupplierView() {
             setActivePurchaseId(undefined);
             setSubTab('receipts');
           }}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] shrink-0 whitespace-nowrap rounded-lg transition-all ${
             subTab === 'receipts'
               ? 'bg-resto-charcoal-800 text-white shadow-sm dark:bg-slate-700 font-bold'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -75,7 +75,7 @@ export function SupplierView() {
             setActivePurchaseId(undefined);
             setSubTab('invoices');
           }}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] shrink-0 whitespace-nowrap rounded-lg transition-all ${
             subTab === 'invoices'
               ? 'bg-resto-charcoal-800 text-white shadow-sm dark:bg-slate-700 font-bold'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'

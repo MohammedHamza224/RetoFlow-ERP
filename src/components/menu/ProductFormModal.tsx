@@ -184,7 +184,7 @@ export function ProductFormModal({
           {/* Image Upload Section */}
           <div className="space-y-1 mb-4">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('menu.productForm.productImage')}</label>
-            <div className="flex items-start gap-4 mt-2">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mt-2">
               <div className="relative w-24 h-24 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50 overflow-hidden shrink-0">
                 {imagePreview ? (
                   <>
