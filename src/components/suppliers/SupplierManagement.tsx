@@ -471,10 +471,10 @@ export function SupplierManagement() {
                 </div>
 
                 {/* Sub Tab Switcher */}
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg w-fit text-xs font-semibold">
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg w-full sm:w-fit max-w-full overflow-x-auto text-xs font-semibold">
                   <button
                     onClick={() => setStatementTab('invoices')}
-                    className={`px-3 py-1.5 rounded-md transition-all ${
+                    className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap min-h-[36px] ${
                       statementTab === 'invoices'
                         ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm'
                         : 'text-slate-600 dark:text-slate-400'
@@ -484,7 +484,7 @@ export function SupplierManagement() {
                   </button>
                   <button
                     onClick={() => setStatementTab('purchases')}
-                    className={`px-3 py-1.5 rounded-md transition-all ${
+                    className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap min-h-[36px] ${
                       statementTab === 'purchases'
                         ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm'
                         : 'text-slate-600 dark:text-slate-400'
@@ -494,7 +494,7 @@ export function SupplierManagement() {
                   </button>
                   <button
                     onClick={() => setStatementTab('receipts')}
-                    className={`px-3 py-1.5 rounded-md transition-all ${
+                    className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap min-h-[36px] ${
                       statementTab === 'receipts'
                         ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm'
                         : 'text-slate-600 dark:text-slate-400'
@@ -506,11 +506,11 @@ export function SupplierManagement() {
 
                 {/* Tab Content: Invoices */}
                 {statementTab === 'invoices' && (
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-x-auto max-h-60 overflow-y-auto">
                     {statementData.invoices.length === 0 ? (
                       <div className="p-6 text-center text-slate-400">{t('purchaseInvoices.noInvoices')}</div>
                     ) : (
-                      <table className="w-full text-xs">
+                      <table className="w-full min-w-[460px] text-xs">
                         <thead className="bg-slate-50 dark:bg-slate-900 font-semibold border-b border-slate-200 dark:border-slate-800">
                           <tr>
                             <th className="p-2 text-left">{t('purchaseInvoices.invoiceNum')}</th>
@@ -555,11 +555,11 @@ export function SupplierManagement() {
 
                 {/* Tab Content: Purchase Orders */}
                 {statementTab === 'purchases' && (
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-x-auto max-h-60 overflow-y-auto">
                     {statementData.purchases.length === 0 ? (
                       <div className="p-6 text-center text-slate-400">{t('purchases.noPurchases')}</div>
                     ) : (
-                      <table className="w-full text-xs">
+                      <table className="w-full min-w-[420px] text-xs">
                         <thead className="bg-slate-50 dark:bg-slate-900 font-semibold border-b border-slate-200 dark:border-slate-800">
                           <tr>
                             <th className="p-2 text-left">{t('purchases.orderNumber')}</th>
@@ -591,11 +591,11 @@ export function SupplierManagement() {
 
                 {/* Tab Content: Goods Receipts */}
                 {statementTab === 'receipts' && (
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-x-auto max-h-60 overflow-y-auto">
                     {statementData.receipts.length === 0 ? (
                       <div className="p-6 text-center text-slate-400">{t('goodsReceipts.noReceipts')}</div>
                     ) : (
-                      <table className="w-full text-xs">
+                      <table className="w-full min-w-[420px] text-xs">
                         <thead className="bg-slate-50 dark:bg-slate-900 font-semibold border-b border-slate-200 dark:border-slate-800">
                           <tr>
                             <th className="p-2 text-left">{t('goodsReceipts.receiptNumber')}</th>

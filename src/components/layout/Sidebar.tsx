@@ -119,7 +119,7 @@ export function Sidebar({
             variant="ghost"
             size="icon"
             onClick={onToggleCollapse}
-            className="h-8 w-8 text-slate-400 hover:text-white hover:bg-resto-charcoal-800 rounded-lg hidden lg:flex"
+            className="h-9 w-9 text-slate-400 hover:text-white hover:bg-resto-charcoal-800 rounded-lg hidden lg:flex"
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {isCollapsed ? (
@@ -135,7 +135,7 @@ export function Sidebar({
               variant="ghost"
               size="icon"
               onClick={onCloseMobile}
-              className="h-9 w-9 text-slate-400 hover:text-white hover:bg-resto-charcoal-800 rounded-lg lg:hidden"
+              className="h-11 w-11 min-h-[44px] min-w-[44px] text-slate-400 hover:text-white hover:bg-resto-charcoal-800 rounded-lg lg:hidden"
               aria-label="Close navigation"
             >
               <X className="w-5 h-5" />

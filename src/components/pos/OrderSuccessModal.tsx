@@ -44,16 +44,16 @@ export function OrderSuccessModal({ isOpen, onClose, orderData }: OrderSuccessMo
       description={`Database Order Reference: ${orderData.order_number}`}
       maxWidth="md"
     >
-      <div className="space-y-6">
+      <div className="space-y-5 print:space-y-0">
         {/* Success Banner */}
-        <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-center space-y-2">
+        <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-center space-y-2 print:hidden">
           <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-7 h-7" />
           </div>
           <h3 className="font-display text-xl font-extrabold text-emerald-950 dark:text-emerald-200">
             {orderData.order_number}
           </h3>
-          <div className="flex items-center justify-center gap-2 text-xs">
+          <div className="flex items-center justify-center gap-2 text-xs flex-wrap">
             <Badge variant="success">{orderData.order_type}</Badge>
             {orderData.table_name && <Badge variant="outline">{orderData.table_name}</Badge>}
             <span className="text-emerald-800 dark:text-emerald-300 font-bold">
@@ -63,7 +63,7 @@ export function OrderSuccessModal({ isOpen, onClose, orderData }: OrderSuccessMo
         </div>
 
         {/* Printable Receipt Preview */}
-        <div className="max-h-[300px] overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-2">
+        <div className="max-h-[300px] overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-2 print:max-h-none print:overflow-visible print:border-none print:bg-transparent print:p-0">
           <PrintableReceipt
             ref={receiptRef}
             orderNumber={orderData.order_number}
@@ -82,12 +82,13 @@ export function OrderSuccessModal({ isOpen, onClose, orderData }: OrderSuccessMo
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 print:hidden">
           <Button
             variant="outline"
             size="md"
             onClick={handlePrint}
             leftIcon={<Printer className="w-4 h-4" />}
+            className="w-full sm:w-auto"
           >
             {t('pos.printReceipt')}
           </Button>
@@ -97,6 +98,7 @@ export function OrderSuccessModal({ isOpen, onClose, orderData }: OrderSuccessMo
             size="md"
             onClick={onClose}
             leftIcon={<PlusCircle className="w-4 h-4" />}
+            className="w-full sm:w-auto"
           >
             {t('pos.newOrder')}
           </Button>

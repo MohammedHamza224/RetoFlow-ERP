@@ -67,11 +67,11 @@ export const TableCard = React.memo(function TableCard({
       </CardContent>
 
       {/* Quick Status Switcher Bar */}
-      <CardFooter className="p-3 pt-2 flex items-center justify-between gap-1 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
-        <div className="flex items-center gap-1">
+      <CardFooter className="p-3 pt-2 flex flex-wrap items-center justify-between gap-1.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
+        <div className="flex items-center gap-1 flex-wrap">
           <button
             onClick={() => onStatusChange(table, 'AVAILABLE')}
-            className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${
+            className={`px-2 py-1.5 min-h-[32px] rounded text-[10px] font-bold transition-all ${
               table.status === 'AVAILABLE'
                 ? 'bg-emerald-600 text-white'
                 : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-emerald-100'
@@ -82,7 +82,7 @@ export const TableCard = React.memo(function TableCard({
 
           <button
             onClick={() => onStatusChange(table, 'OCCUPIED')}
-            className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${
+            className={`px-2 py-1.5 min-h-[32px] rounded text-[10px] font-bold transition-all ${
               table.status === 'OCCUPIED'
                 ? 'bg-amber-600 text-white'
                 : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-amber-100'
@@ -93,7 +93,7 @@ export const TableCard = React.memo(function TableCard({
 
           <button
             onClick={() => onStatusChange(table, 'RESERVED')}
-            className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${
+            className={`px-2 py-1.5 min-h-[32px] rounded text-[10px] font-bold transition-all ${
               table.status === 'RESERVED'
                 ? 'bg-blue-600 text-white'
                 : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-blue-100'
@@ -109,7 +109,7 @@ export const TableCard = React.memo(function TableCard({
             size="sm"
             onClick={() => onEdit(table)}
             leftIcon={<Edit2 className="w-3.5 h-3.5" />}
-            className="h-7 text-xs px-2"
+            className="h-8 min-h-[32px] text-xs px-2.5"
           >
             {t('common.edit')}
           </Button>

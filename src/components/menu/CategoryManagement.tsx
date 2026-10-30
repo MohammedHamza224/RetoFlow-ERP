@@ -192,13 +192,13 @@ export function CategoryManagement() {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full md:w-auto flex-wrap">
           <span className="text-xs font-semibold text-slate-500">{t('common.filter')}:</span>
           {(['ALL', 'ACTIVE', 'INACTIVE'] as const).map(status => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
+              className={`px-3 py-1.5 min-h-[36px] rounded-lg text-xs font-semibold transition-colors ${
                 statusFilter === status
                   ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700'
                   : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'

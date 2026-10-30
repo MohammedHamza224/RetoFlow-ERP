@@ -339,8 +339,8 @@ export function SettingsManagement() {
         </Card>
 
         {/* Actions Bar */}
-        <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800">
-          <span className="text-xs text-slate-400 font-mono">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800">
+          <span className="text-xs text-slate-400 font-mono text-center sm:text-start">
             {isRtl ? 'UI verified • تتطلب الحفظ الدائم ربط Supabase' : 'UI functionality verified • Persistence requires Supabase connection'}
           </span>
           <Button
@@ -349,7 +349,7 @@ export function SettingsManagement() {
             size="md"
             isLoading={isSubmitting}
             leftIcon={<Save className="w-4 h-4" />}
-            className="bg-resto-terracotta-600 hover:bg-resto-terracotta-500 font-bold min-w-[140px]"
+            className="bg-resto-terracotta-600 hover:bg-resto-terracotta-500 font-bold min-w-[140px] w-full sm:w-auto"
           >
             {isRtl ? 'حفظ الإعدادات' : 'Save Settings'}
           </Button>

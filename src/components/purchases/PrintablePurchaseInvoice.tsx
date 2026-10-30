@@ -36,9 +36,9 @@ export function PrintablePurchaseInvoice({ invoice, onClose }: PrintablePurchase
   return (
     <div className="space-y-4">
       {/* Top Action Bar (Hidden when printing) */}
-      <div className="print:hidden flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+      <div className="print:hidden flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-resto-terracotta-600" />
+          <FileText className="w-5 h-5 text-resto-terracotta-600 shrink-0" />
           <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
             {t('purchaseInvoices.printPreview')}
           </span>
@@ -64,14 +64,14 @@ export function PrintablePurchaseInvoice({ invoice, onClose }: PrintablePurchase
       {/* Printable Invoice Container */}
       <div
         id="printable-invoice"
-        className="p-8 bg-white text-slate-900 rounded-xl border border-slate-200 shadow-sm print:p-0 print:border-none print:shadow-none print:m-0 print:w-full"
+        className="p-3 sm:p-6 md:p-8 bg-white text-slate-900 rounded-xl border border-slate-200 shadow-sm print:p-0 print:border-none print:shadow-none print:m-0 print:w-full"
         dir={isRtl ? 'rtl' : 'ltr'}
       >
         {/* Invoice Header */}
-        <div className="flex justify-between items-start pb-6 border-b-2 border-slate-900 gap-4">
+        <div className="flex flex-col sm:flex-row print:flex-row justify-between items-start pb-6 border-b-2 border-slate-900 gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-black tracking-tight text-slate-900 font-display">
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 font-display">
                 RestoFlow
               </span>
               <span className="text-xs uppercase tracking-wider px-2 py-0.5 rounded bg-slate-900 text-white font-mono font-bold">
@@ -87,8 +87,8 @@ export function PrintablePurchaseInvoice({ invoice, onClose }: PrintablePurchase
             </div>
           </div>
 
-          <div className="text-right">
-            <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+          <div className="text-start sm:text-end print:text-end w-full sm:w-auto">
+            <h1 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight">
               {isRtl ? 'فاتورة مشتريات ضريبية' : 'Tax Purchase Invoice'}
             </h1>
             <p className="font-mono text-base font-bold text-resto-terracotta-600 mt-0.5">
@@ -100,7 +100,7 @@ export function PrintablePurchaseInvoice({ invoice, onClose }: PrintablePurchase
                 <span className="font-bold text-slate-700">{invoice.supplier_invoice_number}</span>
               </p>
             )}
-            <div className="flex items-center gap-2 mt-2 justify-end print:justify-end">
+            <div className="flex items-center gap-2 mt-2 justify-start sm:justify-end print:justify-end flex-wrap">
               <span className={`text-[10px] px-2 py-0.5 rounded font-bold border ${statusColor}`}>
                 {t(`purchaseInvoices.status.${invoice.status}`)}
               </span>
@@ -112,7 +112,7 @@ export function PrintablePurchaseInvoice({ invoice, onClose }: PrintablePurchase
         </div>
 
         {/* Invoice Info & Supplier Details Grid */}
-        <div className="grid grid-cols-2 gap-8 py-5 border-b border-slate-200 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-4 sm:gap-8 py-5 border-b border-slate-200 text-xs">
           {/* Supplier Details */}
           <div className="space-y-1.5">
             <h4 className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
@@ -134,7 +134,7 @@ export function PrintablePurchaseInvoice({ invoice, onClose }: PrintablePurchase
               </p>
             )}
             {invoice.supplier?.email && (
-              <p className="text-slate-600">
+              <p className="text-slate-600 break-all">
                 <span className="font-semibold">{isRtl ? 'البريد: ' : 'Email: '}</span>
                 {invoice.supplier.email}
               </p>
@@ -148,35 +148,35 @@ export function PrintablePurchaseInvoice({ invoice, onClose }: PrintablePurchase
           </div>
 
           {/* Invoice Dates & Cross References */}
-          <div className="space-y-1.5 text-right">
+          <div className="space-y-1.5 text-start sm:text-end print:text-end">
             <h4 className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
               {isRtl ? 'بيانات الفاتورة والمرجع' : 'Invoice & References'}
             </h4>
             <div className="space-y-1 font-mono text-xs">
-              <div className="flex justify-between">
+              <div className="flex justify-between gap-2">
                 <span className="text-slate-500">{isRtl ? 'تاريخ الإصدار:' : 'Issue Date:'}</span>
                 <span className="font-bold">{invoice.issue_date}</span>
               </div>
               {invoice.due_date && (
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-2">
                   <span className="text-slate-500">{isRtl ? 'تاريخ الاستحقاق:' : 'Due Date:'}</span>
                   <span className="font-bold">{invoice.due_date}</span>
                 </div>
               )}
               {invoice.purchase?.invoice_number && (
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-2">
                   <span className="text-slate-500">{isRtl ? 'أمر الشراء المرتبط:' : 'Purchase Order Ref:'}</span>
                   <span className="font-bold text-resto-terracotta-600">{invoice.purchase.invoice_number}</span>
                 </div>
               )}
               {invoice.receipt?.receipt_number && (
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-2">
                   <span className="text-slate-500">{isRtl ? 'محضر الاستلام:' : 'Goods Receipt Ref:'}</span>
                   <span className="font-bold text-emerald-700">{invoice.receipt.receipt_number}</span>
                 </div>
               )}
               {invoice.creator?.name && (
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-2">
                   <span className="text-slate-500">{isRtl ? 'أنشئت بواسطة:' : 'Created By:'}</span>
                   <span className="font-bold">{invoice.creator.name}</span>
                 </div>
@@ -186,8 +186,8 @@ export function PrintablePurchaseInvoice({ invoice, onClose }: PrintablePurchase
         </div>
 
         {/* Line Items Table */}
-        <div className="py-5">
-          <table className="w-full text-xs text-left border-collapse">
+        <div className="py-5 overflow-x-auto print:overflow-visible">
+          <table className="w-full min-w-[580px] print:min-w-0 text-xs text-start border-collapse">
             <thead>
               <tr className="border-b-2 border-slate-900 bg-slate-50 text-slate-800 font-bold">
                 <th className="py-2.5 px-2 text-center w-8">#</th>
@@ -222,7 +222,7 @@ export function PrintablePurchaseInvoice({ invoice, onClose }: PrintablePurchase
         </div>
 
         {/* Financial Summary & Notes Grid */}
-        <div className="grid grid-cols-2 gap-8 pt-4 border-t-2 border-slate-900">
+        <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-4 sm:gap-8 pt-4 border-t-2 border-slate-900">
           {/* Notes and Terms */}
           <div className="space-y-3">
             {invoice.notes && (
@@ -275,7 +275,7 @@ export function PrintablePurchaseInvoice({ invoice, onClose }: PrintablePurchase
         </div>
 
         {/* Signatures & Authorizations */}
-        <div className="grid grid-cols-2 gap-12 pt-12 text-xs text-center border-t border-slate-200 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-6 sm:gap-12 pt-8 sm:pt-12 text-xs text-center border-t border-slate-200 mt-6 sm:mt-8">
           <div>
             <div className="border-b border-slate-400 pb-8 mb-2"></div>
             <span className="font-bold text-slate-700 block">

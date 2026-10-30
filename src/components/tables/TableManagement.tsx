@@ -168,10 +168,10 @@ export function TableManagement() {
       </div>
 
       {/* Floor Plan Status Summary Bar */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
             <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200">{t('tables.available')}</span>
           </div>
           <span className="text-lg font-extrabold text-emerald-700 font-display">{availableCount}</span>
@@ -179,7 +179,7 @@ export function TableManagement() {
 
         <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-amber-600" />
+            <Clock className="w-5 h-5 text-amber-600 shrink-0" />
             <span className="text-xs font-bold text-amber-900 dark:text-amber-200">{t('tables.occupied')}</span>
           </div>
           <span className="text-lg font-extrabold text-amber-700 font-display">{occupiedCount}</span>
@@ -187,7 +187,7 @@ export function TableManagement() {
 
         <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CalendarCheck className="w-5 h-5 text-blue-600" />
+            <CalendarCheck className="w-5 h-5 text-blue-600 shrink-0" />
             <span className="text-xs font-bold text-blue-900 dark:text-blue-200">{t('tables.reserved')}</span>
           </div>
           <span className="text-lg font-extrabold text-blue-700 font-display">{reservedCount}</span>
@@ -195,7 +195,7 @@ export function TableManagement() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-card border border-slate-200 dark:border-slate-800 shadow-subtle">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 p-4 rounded-xl bg-card border border-slate-200 dark:border-slate-800 shadow-subtle">
         <div className="w-full md:w-80">
           <Input
             placeholder={t('tables.searchPlaceholder')}
@@ -206,7 +206,7 @@ export function TableManagement() {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full md:w-auto flex-wrap">
           <span className="text-xs font-semibold text-slate-500">{t('tables.status')}:</span>
           {(['ALL', 'AVAILABLE', 'OCCUPIED', 'RESERVED'] as const).map(s => {
             const label = s === 'ALL' ? t('tables.all') : t(`status.${s}`);
@@ -214,7 +214,7 @@ export function TableManagement() {
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                className={`px-3 py-1.5 min-h-[36px] rounded-lg text-xs font-semibold transition-colors ${
                   statusFilter === s
                     ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700'
                     : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'

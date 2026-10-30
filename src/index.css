@@ -131,28 +131,30 @@ input[type="submit"] {
   header,
   nav,
   .no-print,
-  button,
-  .fixed.inset-0.bg-slate-950\/60,
-  .fixed.inset-0.bg-black\/50 {
+  button {
     display: none !important;
   }
 
-  body {
+  body,
+  html {
     background: #ffffff !important;
     color: #000000 !important;
     font-size: 11pt !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
   main {
     padding: 0 !important;
     margin: 0 !important;
+    overflow: visible !important;
   }
 
   .print-only {
     display: block !important;
   }
 
-  /* Thermal POS receipt page styling */
+  /* Thermal POS receipt & invoice page styling */
   @page {
     margin: 5mm;
   }

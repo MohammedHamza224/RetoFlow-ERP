@@ -359,7 +359,7 @@ export function KnowledgeBaseManager() {
                       {r}
                     </span>
                   ))}
-                  <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-mono flex items-center gap-1">
+                  <span className="ms-auto px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-mono flex items-center gap-1">
                     <Layers className="w-3 h-3" />
                     {doc.chunk_count || 1} {isRtl ? 'أجزاء متجهة' : 'chunks'}
                   </span>
@@ -377,7 +377,7 @@ export function KnowledgeBaseManager() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setPreviewDoc(doc)}
-                    className="h-7 px-2 text-slate-500 hover:text-slate-900"
+                    className="h-8 w-8 min-h-[36px] min-w-[36px] p-0 text-slate-500 hover:text-slate-900"
                     title={isRtl ? 'معاينة المقاطع' : 'Preview Chunks'}
                   >
                     <Eye className="w-3.5 h-3.5" />
@@ -387,7 +387,7 @@ export function KnowledgeBaseManager() {
                     size="sm"
                     onClick={() => handleReindex(doc.id)}
                     disabled={isReindexingId === doc.id}
-                    className="h-7 px-2 text-slate-500 hover:text-resto-terracotta-600"
+                    className="h-8 w-8 min-h-[36px] min-w-[36px] p-0 text-slate-500 hover:text-resto-terracotta-600"
                     title={isRtl ? 'إعادة الفهرسة المتجهة' : 'Re-index Vector'}
                   >
                     <RefreshCw
@@ -398,7 +398,7 @@ export function KnowledgeBaseManager() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleOpenEdit(doc)}
-                    className="h-7 px-2 text-slate-500 hover:text-blue-600"
+                    className="h-8 w-8 min-h-[36px] min-w-[36px] p-0 text-slate-500 hover:text-blue-600"
                     title={isRtl ? 'تعديل' : 'Edit'}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -407,7 +407,7 @@ export function KnowledgeBaseManager() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setDeleteConfirmId(doc.id)}
-                    className="h-7 px-2 text-slate-500 hover:text-red-600"
+                    className="h-8 w-8 min-h-[36px] min-w-[36px] p-0 text-slate-500 hover:text-red-600"
                     title={isRtl ? 'حذف' : 'Delete'}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -435,7 +435,7 @@ export function KnowledgeBaseManager() {
         }
         maxWidth="lg"
       >
-        <form onSubmit={handleSaveDocument} className="space-y-4 p-5">
+        <form onSubmit={handleSaveDocument} className="space-y-4">
           {formError && (
             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 text-xs border border-red-200">
               {formError}
@@ -603,7 +603,7 @@ export function KnowledgeBaseManager() {
         description={isRtl ? 'معاينة المقاطع النصية والمتجهات (Chunks & Vectors)' : 'Text Chunks & 768-dim Vector Embeddings'}
         maxWidth="lg"
       >
-        <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto">
           <div className="text-xs text-slate-500">
             {isRtl
               ? `تم تقسيم هذه الوثيقة إلى ${previewChunks.length} مقاطع متداخلة باستخدام خوارزمية النافذة المنزلقة (Sliding Window):`
@@ -636,7 +636,7 @@ export function KnowledgeBaseManager() {
         title={isRtl ? 'تأكيد حذف الوثيقة' : 'Confirm Document Deletion'}
         maxWidth="sm"
       >
-        <div className="p-5 space-y-4">
+        <div className="space-y-4">
           <p className="text-xs text-slate-600 dark:text-slate-400">
             {isRtl
               ? 'هل أنت متأكد من حذف هذه الوثيقة؟ سيتم حذف جميع المتجهات المرتبطة بها ولن تعد متاحة للمساعد الذكي.'

@@ -366,15 +366,15 @@ export function AiAssistant() {
           </div>
 
           {/* Conversational Chat Box */}
-          <Card className="border border-slate-200 dark:border-slate-800 bg-card shadow-subtle flex flex-col h-[520px]">
+          <Card className="border border-slate-200 dark:border-slate-800 bg-card shadow-subtle flex flex-col h-[460px] sm:h-[520px]">
             {/* Chat Box Header Bar */}
-            <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
+            <div className="px-3 sm:px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="font-semibold text-slate-700 dark:text-slate-300 truncate">
                   {isRtl ? 'محادثة المساعد الذكي المعتمد' : 'Verified AI Assistant Session'}
                 </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 shrink-0">
                   Role: {user.role_name}
                 </span>
               </div>
@@ -383,19 +383,19 @@ export function AiAssistant() {
                 variant="ghost"
                 size="sm"
                 onClick={handleClearChat}
-                className="h-7 px-2 text-[11px] text-slate-500 hover:text-red-600"
+                className="h-8 px-2 text-[11px] text-slate-500 hover:text-red-600"
               >
-                <Trash2 className="w-3 h-3 mr-1 rtl:mr-0 rtl:ml-1" />
+                <Trash2 className="w-3 h-3 me-1" />
                 {isRtl ? 'مسح المحادثة' : 'Clear Chat'}
               </Button>
             </div>
 
             {/* Messages Scroll Area */}
-            <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+            <CardContent className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4">
               {messages.map(msg => (
                 <div
                   key={msg.id}
-                  className={`flex items-start gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex items-start gap-2.5 sm:gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {msg.sender === 'assistant' && (
                     <div className="w-8 h-8 rounded-full bg-resto-terracotta-600/10 border border-resto-terracotta-600/30 flex items-center justify-center shrink-0">
@@ -404,7 +404,7 @@ export function AiAssistant() {
                   )}
 
                   <div
-                    className={`max-w-2xl rounded-2xl px-4 py-3 text-xs leading-relaxed ${
+                    className={`max-w-[85%] sm:max-w-2xl rounded-2xl px-3.5 sm:px-4 py-3 text-xs leading-relaxed break-words ${
                       msg.sender === 'user'
                         ? 'bg-resto-charcoal-800 text-white rounded-br-none dark:bg-slate-700'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-200 dark:border-slate-700'
@@ -515,7 +515,7 @@ export function AiAssistant() {
                   {isRtl ? 'إرسال' : 'Send'}
                 </Button>
               </form>
-              <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2 px-1 font-mono">
+              <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-400 mt-2 px-1 font-mono">
                 <span>✓ RAG Knowledge Base + Centralized Metrics</span>
                 <span>Active Role: {user.role_name}</span>
               </div>
@@ -536,7 +536,7 @@ export function AiAssistant() {
         }
         maxWidth="md"
       >
-        <div className="p-5 space-y-4">
+        <div className="space-y-4">
           <div className="flex items-center justify-between text-xs">
             <span className="font-mono text-resto-terracotta-600 font-bold">
               {selectedCitation?.document_source}

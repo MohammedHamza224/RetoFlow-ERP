@@ -612,7 +612,7 @@ export function AnalyticsDashboard() {
             </Card>
 
             {/* Order Status Distribution Pie Chart */}
-            <Card className="bg-card border border-slate-200 dark:border-slate-800">
+            <Card className="bg-card border border-slate-200 dark:border-slate-800 overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span>{isRtl ? 'توزيع دورة حياة الطلبات' : 'Order Lifecycle Distribution'}</span>
@@ -621,7 +621,7 @@ export function AnalyticsDashboard() {
                   </Badge>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="h-64 pt-2 flex items-center justify-center">
+              <CardContent className="h-64 pt-2 flex items-center justify-center overflow-hidden">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -630,8 +630,8 @@ export function AnalyticsDashboard() {
                       nameKey="status"
                       cx="50%"
                       cy="50%"
-                      outerRadius={75}
-                      innerRadius={45}
+                      outerRadius={65}
+                      innerRadius={38}
                       paddingAngle={4}
                       label={({ status, count }) => `${translateStatus(status)}: ${count}`}
                     >
@@ -646,13 +646,13 @@ export function AnalyticsDashboard() {
             </Card>
 
             {/* Cancellation Reasons Breakdown */}
-            <Card className="bg-card border border-slate-200 dark:border-slate-800">
+            <Card className="bg-card border border-slate-200 dark:border-slate-800 overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold">
                   {isRtl ? 'تحليل أسباب الإلغاء' : 'Cancellation Reason Analysis'}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="h-64 pt-2 flex items-center justify-center">
+              <CardContent className="h-64 pt-2 flex items-center justify-center overflow-hidden">
                 {breakdown.cancellation_reasons.every((r: any) => r.count === 0) ? (
                   <div className="h-full flex items-center justify-center text-xs text-slate-400">
                     {isRtl ? 'لا توجد طلبات ملغاة مسجلة في هذه الفترة.' : 'No order cancellations recorded in this period.'}
@@ -666,7 +666,7 @@ export function AnalyticsDashboard() {
                         nameKey="reason"
                         cx="50%"
                         cy="50%"
-                        outerRadius={70}
+                        outerRadius={62}
                         paddingAngle={3}
                         label={({ reason, count }) => `${translateReason(reason)}: ${count}`}
                       >
@@ -684,9 +684,9 @@ export function AnalyticsDashboard() {
             {/* Inventory Health Alert List */}
             <Card className="bg-card border border-slate-200 dark:border-slate-800 md:col-span-2">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center justify-between">
+                <CardTitle className="text-sm font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span>{isRtl ? 'مراقبة وتنبيهات صحة مخزون الأصناف' : 'Inventory Stock Health & Alert Monitoring'}</span>
-                  <Badge variant="warning" className="text-[10px]">
+                  <Badge variant="warning" className="text-[10px] w-fit">
                     {isRtl ? 'حدود إعادة الطلب' : 'Restock Thresholds'}
                   </Badge>
                 </CardTitle>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShoppingCart, Trash2, Plus, Minus, Tag } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, Tag, CreditCard, ArrowRight } from 'lucide-react';
 import { Product } from '@/types/database.types';
 import { formatCurrency } from '@/lib/utils';
 import { getActiveCurrency } from '@/lib/currency';
@@ -22,6 +22,7 @@ export interface CartPanelProps {
   onRemoveItem: (productId: string) => void;
   onClearCart: () => void;
   onUpdateDiscount: (discount: number) => void;
+  onProceedToCheckout?: () => void;
 }
 
 export const CartPanel = React.memo(function CartPanel({
@@ -31,6 +32,7 @@ export const CartPanel = React.memo(function CartPanel({
   onRemoveItem,
   onClearCart,
   onUpdateDiscount,
+  onProceedToCheckout,
 }: CartPanelProps) {
   const { t } = useTranslation();
 
@@ -86,10 +88,10 @@ export const CartPanel = React.memo(function CartPanel({
                 </div>
 
                 {/* Quantity Controls */}
-                <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-1 bg-white dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0">
                   <button
                     onClick={() => onUpdateQuantity(product.id, -1)}
-                    className="h-8 w-8 min-h-[32px] min-w-[32px] flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300"
+                    className="h-9 w-9 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300"
                     aria-label="Decrease quantity"
                   >
                     <Minus className="w-3.5 h-3.5" />
@@ -98,7 +100,7 @@ export const CartPanel = React.memo(function CartPanel({
                   <button
                     onClick={() => onUpdateQuantity(product.id, 1)}
                     disabled={isStockMax}
-                    className={`h-8 w-8 min-h-[32px] min-w-[32px] flex items-center justify-center rounded transition-colors ${
+                    className={`h-9 w-9 min-h-[36px] min-w-[36px] flex items-center justify-center rounded transition-colors ${
                       isStockMax
                         ? 'opacity-40 cursor-not-allowed text-slate-400'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -110,13 +112,13 @@ export const CartPanel = React.memo(function CartPanel({
                 </div>
 
                 {/* Line Total & Delete */}
-                <div className="text-right flex items-center gap-2">
+                <div className="text-end flex items-center gap-1.5 shrink-0">
                   <span className="text-xs font-extrabold text-resto-terracotta-600 font-display">
                     {formatCurrency(lineTotal)}
                   </span>
                   <button
                     onClick={() => onRemoveItem(product.id)}
-                    className="text-slate-400 hover:text-red-600 p-2 min-h-[32px] min-w-[32px] flex items-center justify-center rounded"
+                    className="text-slate-400 hover:text-red-600 p-2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded"
                     aria-label="Remove item"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -170,6 +172,22 @@ export const CartPanel = React.memo(function CartPanel({
             <span>{t('pos.total')}:</span>
             <span className="font-display text-base">{formatCurrency(totals.total)}</span>
           </div>
+
+          {/* Mobile & Tablet Direct Proceed to Checkout Button (< lg) */}
+          {onProceedToCheckout && (
+            <div className="lg:hidden pt-2">
+              <Button
+                type="button"
+                variant="primary"
+                onClick={onProceedToCheckout}
+                className="w-full h-11 min-h-[44px] font-bold text-xs flex items-center justify-center gap-2 shadow-sm"
+              >
+                <CreditCard className="w-4 h-4 shrink-0" />
+                <span>{t('pos.checkout') || 'Proceed to Checkout'}</span>
+                <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180 shrink-0" />
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

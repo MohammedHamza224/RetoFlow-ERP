@@ -53,7 +53,7 @@ export const PrintableReceipt = React.forwardRef<HTMLDivElement, PrintableReceip
     return (
       <div
         ref={ref}
-        className="w-[80mm] min-h-[100mm] bg-white text-black p-4 font-mono text-xs leading-tight shadow-lg border border-slate-200 mx-auto select-none print:shadow-none print:border-none print:w-full print:p-0"
+        className="w-[80mm] max-w-full min-h-[100mm] bg-white text-black p-3 sm:p-4 font-mono text-xs leading-tight shadow-lg border border-slate-200 mx-auto select-none print:shadow-none print:border-none print:w-full print:p-0"
         style={{ fontFamily: "'Courier New', Courier, monospace" }}
       >
         {/* Header */}

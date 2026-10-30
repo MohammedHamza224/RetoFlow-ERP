@@ -310,7 +310,7 @@ export function ProductManagement() {
       {!isLoading && viewMode === 'table' && filteredProducts.length > 0 && (
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-card overflow-hidden shadow-subtle">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-start">
+            <table className="w-full min-w-[720px] text-xs text-start">
               <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold uppercase tracking-wider">
                 <tr>
                   <th className="p-3.5 text-start">{t('inventory.product')}</th>
@@ -342,19 +342,21 @@ export function ProductManagement() {
                       </Badge>
                     </td>
                     {isManagerOrAdmin && (
-                      <td className="p-3.5 text-end space-x-2">
-                        <Button variant="ghost" size="sm" onClick={() => openEditModal(p)} leftIcon={<Edit2 className="w-3.5 h-3.5" />}>
-                          {t('common.edit')}
-                        </Button>
-                        <Button
-                          variant={p.is_active ? 'outline' : 'secondary'}
-                          size="sm"
-                          onClick={() => handleToggleStatus(p)}
-                          leftIcon={<Power className="w-3.5 h-3.5" />}
-                          className={p.is_active ? 'text-amber-600' : 'text-emerald-600'}
-                        >
-                          {p.is_active ? (isRtl ? 'تعطيل' : 'Deactivate') : (isRtl ? 'تفعيل' : 'Reactivate')}
-                        </Button>
+                      <td className="p-3.5 text-end">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => openEditModal(p)} leftIcon={<Edit2 className="w-3.5 h-3.5" />}>
+                            {t('common.edit')}
+                          </Button>
+                          <Button
+                            variant={p.is_active ? 'outline' : 'secondary'}
+                            size="sm"
+                            onClick={() => handleToggleStatus(p)}
+                            leftIcon={<Power className="w-3.5 h-3.5" />}
+                            className={p.is_active ? 'text-amber-600' : 'text-emerald-600'}
+                          >
+                            {p.is_active ? (isRtl ? 'تعطيل' : 'Deactivate') : (isRtl ? 'تفعيل' : 'Reactivate')}
+                          </Button>
+                        </div>
                       </td>
                     )}
                   </tr>

@@ -63,7 +63,7 @@ export function Header({ activeTab, onToggleMobileNav }: HeaderProps) {
         {/* Mobile Hamburger Toggle Button (< lg) */}
         <button
           onClick={onToggleMobileNav}
-          className="lg:hidden h-10 w-10 flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 -ms-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
+          className="lg:hidden h-11 w-11 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 -ms-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
           aria-label="Toggle navigation menu"
         >
           <Menu className="w-5 h-5" />
@@ -112,7 +112,7 @@ export function Header({ activeTab, onToggleMobileNav }: HeaderProps) {
           size="sm"
           onClick={toggleLanguage}
           leftIcon={<Globe className="w-3.5 h-3.5 text-resto-terracotta-600 shrink-0" />}
-          className="h-9 px-2 sm:px-3 text-xs font-semibold shrink-0"
+          className="h-10 min-h-[40px] px-2.5 sm:px-3 text-xs font-semibold shrink-0"
         >
           <span className="hidden sm:inline">{currentLang === 'en' ? 'العربية (AR)' : 'English (EN)'}</span>
           <span className="sm:hidden font-bold">{currentLang === 'en' ? 'AR' : 'EN'}</span>
@@ -120,19 +120,19 @@ export function Header({ activeTab, onToggleMobileNav }: HeaderProps) {
 
         {/* Notification Bell */}
         <button
-          className="relative h-9 w-9 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0"
+          className="relative h-10 w-10 min-h-[40px] min-w-[40px] flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0"
           title={t('header.notifications')}
           aria-label={t('header.notifications')}
         >
           <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-resto-terracotta-600 ring-2 ring-white dark:ring-slate-900" />
+          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-resto-terracotta-600 ring-2 ring-white dark:ring-slate-900" />
         </button>
 
         {/* Authenticated User Profile Badge & Logout */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 ps-1 sm:ps-2 border-s border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-1 sm:gap-2 ps-1 sm:ps-2 border-s border-slate-200 dark:border-slate-800">
           <button
             onClick={() => setIsProfileModalOpen(true)}
-            className="flex items-center gap-2 text-start hover:opacity-80 transition-opacity p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="flex items-center gap-2 text-start hover:opacity-80 transition-opacity p-1 min-h-[40px] rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
             title={isRtl ? 'تعديل الملف الشخصي' : 'Edit User Profile'}
             aria-label="User Profile"
           >
@@ -155,7 +155,7 @@ export function Header({ activeTab, onToggleMobileNav }: HeaderProps) {
             variant="ghost"
             size="icon"
             onClick={() => logout()}
-            className="h-8 w-8 text-slate-400 hover:text-red-600 rounded-lg shrink-0"
+            className="h-10 w-10 min-h-[40px] min-w-[40px] text-slate-400 hover:text-red-600 rounded-lg shrink-0"
             title={t('nav.logout')}
             aria-label={t('nav.logout')}
           >

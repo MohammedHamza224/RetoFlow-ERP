@@ -203,14 +203,15 @@ export function PosWorkspace() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6.5rem)] min-h-[500px] select-none">
+    <div className="flex flex-col h-[calc(100vh-6.5rem)] h-[calc(100dvh-6rem)] min-h-[500px] select-none">
       {/* Mobile / Tablet View Switcher Tab Bar (< lg) */}
       <div className="lg:hidden flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-3 text-xs font-bold shrink-0 border border-slate-200 dark:border-slate-700">
+        {/* Catalog button: only needed on mobile (< md), since Tablet (md..lg) always shows Catalog on the left */}
         <button
           type="button"
           onClick={() => setActiveMobileTab('catalog')}
           className={cn(
-            'flex-1 py-2 px-2 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 min-h-[40px]',
+            'md:hidden flex-1 py-2 px-2 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 min-h-[42px]',
             activeMobileTab === 'catalog'
               ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700 shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -224,9 +225,11 @@ export function PosWorkspace() {
           type="button"
           onClick={() => setActiveMobileTab('cart')}
           className={cn(
-            'flex-1 py-2 px-2 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 min-h-[40px] relative',
-            activeMobileTab === 'cart'
-              ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700 shadow-sm'
+            'flex-1 py-2 px-2 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 min-h-[42px] relative',
+            activeMobileTab === 'cart' || (activeMobileTab === 'catalog' && 'md:bg-resto-charcoal-800 md:text-white md:dark:bg-slate-700 md:shadow-sm')
+              ? activeMobileTab === 'cart'
+                ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 md:bg-resto-charcoal-800 md:text-white md:dark:bg-slate-700 md:shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
           )}
         >
@@ -243,7 +246,7 @@ export function PosWorkspace() {
           type="button"
           onClick={() => setActiveMobileTab('checkout')}
           className={cn(
-            'flex-1 py-2 px-2 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 min-h-[40px]',
+            'flex-1 py-2 px-2 rounded-lg text-center transition-all flex items-center justify-center gap-1.5 min-h-[42px]',
             activeMobileTab === 'checkout'
               ? 'bg-resto-charcoal-800 text-white dark:bg-slate-700 shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
@@ -259,13 +262,13 @@ export function PosWorkspace() {
         </button>
       </div>
 
-      {/* POS Panels Grid (Desktop: 12 Cols / Mobile: Active Tab Display) */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* LEFT: Product Catalog (5 cols on Desktop) */}
+      {/* POS Panels Grid (Mobile: 1 Active Tab | Tablet md..lg: 2-Col Split [Catalog + Cart/Checkout] | Desktop lg+: 3-Col Split) */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 lg:grid-cols-12 gap-3 lg:gap-4">
+        {/* LEFT: Product Catalog (Always visible on Tablet md:col-span-7 and Desktop lg:col-span-5) */}
         <div
           className={cn(
-            'h-full overflow-hidden lg:col-span-5',
-            activeMobileTab === 'catalog' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'
+            'h-full overflow-hidden md:col-span-7 lg:col-span-5',
+            activeMobileTab === 'catalog' ? 'flex flex-col' : 'hidden md:flex md:flex-col'
           )}
         >
           <ProductCatalog
@@ -275,11 +278,15 @@ export function PosWorkspace() {
           />
         </div>
 
-        {/* CENTER: Shopping Cart (4 cols on Desktop) */}
+        {/* CENTER: Shopping Cart (Visible on Tablet md:col-span-5 when not on checkout, and always on Desktop lg:col-span-4) */}
         <div
           className={cn(
-            'h-full overflow-hidden lg:col-span-4',
-            activeMobileTab === 'cart' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'
+            'h-full overflow-hidden md:col-span-5 lg:col-span-4',
+            activeMobileTab === 'cart'
+              ? 'flex flex-col'
+              : activeMobileTab === 'catalog'
+              ? 'hidden md:flex md:flex-col lg:flex lg:flex-col'
+              : 'hidden lg:flex lg:flex-col'
           )}
         >
           <CartPanel
@@ -289,13 +296,14 @@ export function PosWorkspace() {
             onRemoveItem={handleRemoveItem}
             onClearCart={handleClearCart}
             onUpdateDiscount={setOrderDiscount}
+            onProceedToCheckout={() => setActiveMobileTab('checkout')}
           />
         </div>
 
-        {/* RIGHT: Customer & Checkout Panel (3 cols on Desktop) */}
+        {/* RIGHT: Customer & Checkout Panel (Visible on Tablet md:col-span-5 when checkout tab active, and always on Desktop lg:col-span-3) */}
         <div
           className={cn(
-            'h-full overflow-hidden lg:col-span-3',
+            'h-full overflow-hidden md:col-span-5 lg:col-span-3',
             activeMobileTab === 'checkout' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'
           )}
         >
@@ -309,13 +317,13 @@ export function PosWorkspace() {
         </div>
       </div>
 
-      {/* Mobile Floating Quick Bar (Appears when Catalog tab is active and Cart has items) */}
+      {/* Mobile Floating Quick Bar (Appears on phones < md when Catalog tab is active and Cart has items) */}
       {activeMobileTab === 'catalog' && cartItemCount > 0 && (
-        <div className="lg:hidden sticky bottom-2 z-20 pt-2 pb-safe">
+        <div className="md:hidden sticky bottom-2 z-20 pt-2 pb-safe">
           <button
             type="button"
             onClick={() => setActiveMobileTab('cart')}
-            className="w-full bg-resto-terracotta-600 hover:bg-resto-terracotta-500 text-white p-3.5 rounded-xl shadow-elevated flex items-center justify-between font-bold text-xs sm:text-sm animate-in slide-in-from-bottom-2 duration-200"
+            className="w-full bg-resto-terracotta-600 hover:bg-resto-terracotta-500 text-white p-3.5 rounded-xl shadow-elevated flex items-center justify-between font-bold text-xs sm:text-sm animate-in slide-in-from-bottom-2 duration-200 min-h-[48px]"
           >
             <div className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />

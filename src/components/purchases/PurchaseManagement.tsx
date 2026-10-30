@@ -461,12 +461,12 @@ export function PurchaseManagement({ onNavigateToReceipts, onNavigateToInvoices 
 
             <div className="space-y-2 max-h-56 overflow-y-auto">
               {purchaseItems.map((item, index) => (
-                <div key={index} className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                  <div className="flex-1">
+                <div key={index} className="flex flex-wrap sm:flex-nowrap items-center gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                  <div className="w-full sm:flex-1 min-w-0">
                     <select
                       value={item.product_id}
                       onChange={(e) => handleItemChange(index, 'product_id', e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-background px-2 py-1.5 text-xs"
+                      className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-background px-2 py-1.5 text-xs h-9"
                     >
                       {products.map(p => (
                         <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
@@ -474,7 +474,7 @@ export function PurchaseManagement({ onNavigateToReceipts, onNavigateToInvoices 
                     </select>
                   </div>
 
-                  <div className="w-20">
+                  <div className="w-16 sm:w-20">
                     <Input
                       type="number"
                       min="1"
@@ -482,7 +482,7 @@ export function PurchaseManagement({ onNavigateToReceipts, onNavigateToInvoices 
                       value={item.quantity}
                       onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value, 10) || 1)}
                       placeholder={t('purchases.qty')}
-                      className="h-8 text-xs text-center font-mono"
+                      className="h-9 text-xs text-center font-mono"
                     />
                   </div>
 
@@ -494,18 +494,19 @@ export function PurchaseManagement({ onNavigateToReceipts, onNavigateToInvoices 
                       value={item.unit_cost}
                       onChange={(e) => handleItemChange(index, 'unit_cost', parseFloat(e.target.value) || 0)}
                       placeholder={t('purchases.unitCost')}
-                      className="h-8 text-xs text-right font-mono"
+                      className="h-9 text-xs text-end font-mono"
                     />
                   </div>
 
-                  <div className="w-24 text-right font-bold text-xs font-mono text-resto-terracotta-600">
+                  <div className="flex-1 sm:w-24 sm:flex-none text-end font-bold text-xs font-mono text-resto-terracotta-600">
                     {formatCurrency(item.quantity * item.unit_cost)}
                   </div>
 
                   <button
                     type="button"
                     onClick={() => handleRemoveItem(index)}
-                    className="p-1 text-slate-400 hover:text-red-600"
+                    className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-slate-400 hover:text-red-600 rounded"
+                    aria-label="Remove line item"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
