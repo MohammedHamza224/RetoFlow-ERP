@@ -120,6 +120,13 @@ export function PosWorkspace() {
     setOrderDiscount(0);
   }, []);
 
+  const handleCustomerCreated = useCallback((newCustomer: Customer) => {
+    setCustomers(prev => [newCustomer, ...prev.filter(c => c.id !== newCustomer.id)]);
+    DatabaseService.getCustomers()
+      .then(fresh => setCustomers(fresh))
+      .catch(err => console.warn('Customer refresh warning:', err));
+  }, []);
+
   const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity) - item.discount, 0);
   const totals = calculateOrderTotals(subtotal, orderDiscount, DEFAULT_VAT_RATE);
 
@@ -313,6 +320,7 @@ export function PosWorkspace() {
             customers={customers}
             tables={tables}
             onCompleteCheckout={handleCompleteCheckout}
+            onCustomerCreated={handleCustomerCreated}
             isSubmitting={isSubmitting}
           />
         </div>

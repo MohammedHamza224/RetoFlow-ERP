@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Users, Utensils, Grid, CreditCard, Plus, Trash2, ShieldAlert, ArrowRight } from 'lucide-react';
+import { Users, UserPlus, CheckCircle2, Utensils, Grid, CreditCard, Plus, Trash2, ShieldAlert, ArrowRight } from 'lucide-react';
 import { Customer, RestaurantTable } from '@/types/database.types';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
+import { QuickCustomerModal } from './QuickCustomerModal';
 
 export interface PaymentSplitRow {
   payment_method: 'CASH' | 'CARD' | 'MADA' | 'APPLE_PAY' | 'OTHER';
@@ -22,6 +23,7 @@ export interface CheckoutPanelProps {
     order_type: 'DINE_IN' | 'TAKEAWAY' | 'DELIVERY';
     payments: PaymentSplitRow[];
   }) => Promise<void>;
+  onCustomerCreated?: (customer: Customer) => void;
   isSubmitting: boolean;
 }
 
@@ -30,6 +32,7 @@ export const CheckoutPanel = React.memo(function CheckoutPanel({
   customers,
   tables,
   onCompleteCheckout,
+  onCustomerCreated,
   isSubmitting,
 }: CheckoutPanelProps) {
   const { t } = useTranslation();
@@ -48,6 +51,19 @@ export const CheckoutPanel = React.memo(function CheckoutPanel({
   ]);
 
   const [checkoutError, setCheckoutError] = useState<string>('');
+  const [isQuickCustomerModalOpen, setIsQuickCustomerModalOpen] = useState<boolean>(false);
+  const [quickCustomerNotice, setQuickCustomerNotice] = useState<string>('');
+
+  const handleQuickCustomerCreated = (newCustomer: Customer) => {
+    if (onCustomerCreated) {
+      onCustomerCreated(newCustomer);
+    }
+    setSelectedCustomerId(newCustomer.id);
+    setQuickCustomerNotice(`${t('pos.quickCustomerSuccess')}: ${newCustomer.name}`);
+    setTimeout(() => {
+      setQuickCustomerNotice('');
+    }, 4500);
+  };
 
   // Available tables filtering
   const availableTables = tables.filter(t => t.status === 'AVAILABLE');
@@ -131,14 +147,42 @@ export const CheckoutPanel = React.memo(function CheckoutPanel({
 
       {/* 1. Customer Selection */}
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-          <Users className="w-3.5 h-3.5 text-resto-terracotta-600" />
-          {t('pos.selectCustomer')}
-        </label>
+        <div className="flex items-center justify-between gap-2">
+          <label
+            htmlFor="pos-customer-select"
+            className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 min-w-0"
+          >
+            <Users className="w-3.5 h-3.5 text-resto-terracotta-600 shrink-0" />
+            <span className="truncate">{t('pos.selectCustomer')}</span>
+          </label>
+          <button
+            type="button"
+            data-testid="pos-new-customer-btn"
+            onClick={() => setIsQuickCustomerModalOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 min-h-[44px] min-w-[44px] rounded-lg text-xs font-bold text-resto-terracotta-600 dark:text-resto-terracotta-400 bg-resto-terracotta-50/80 hover:bg-resto-terracotta-100 dark:bg-resto-terracotta-950/40 dark:hover:bg-resto-terracotta-900/50 border border-resto-terracotta-200 dark:border-resto-terracotta-800/70 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
+          >
+            <UserPlus className="w-3.5 h-3.5 shrink-0" />
+            <span>+ {t('pos.newCustomer')}</span>
+          </button>
+        </div>
+
+        {quickCustomerNotice && (
+          <div
+            role="status"
+            data-testid="pos-quick-customer-success"
+            className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold flex items-center gap-1.5 animate-in fade-in duration-200"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+            <span className="truncate">{quickCustomerNotice}</span>
+          </div>
+        )}
+
         <select
+          id="pos-customer-select"
+          data-testid="pos-customer-select"
           value={selectedCustomerId}
           onChange={(e) => setSelectedCustomerId(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
+          className="w-full min-h-[42px] rounded-lg border border-slate-300 dark:border-slate-700 bg-background px-3 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-resto-terracotta-500"
         >
           {customers.filter(c => c.is_active !== false).map(c => (
             <option key={c.id} value={c.id}>
@@ -308,6 +352,13 @@ export const CheckoutPanel = React.memo(function CheckoutPanel({
           </Button>
         </div>
       </div>
+
+      <QuickCustomerModal
+        isOpen={isQuickCustomerModalOpen}
+        onClose={() => setIsQuickCustomerModalOpen(false)}
+        existingCustomers={customers}
+        onCustomerCreated={handleQuickCustomerCreated}
+      />
     </div>
   );
 });

@@ -857,7 +857,7 @@ export class DatabaseService {
   }
   static async createCustomer(
     userId: string | undefined,
-    data: { name: string; phone?: string; email?: string; customer_type?: CustomerType }
+    data: { name: string; phone?: string; email?: string; address?: string; customer_type?: CustomerType }
   ): Promise<Customer> {
     this.validateRolePermission(userId, ['ADMIN', 'MANAGER', 'CASHIER']);
 
@@ -865,14 +865,19 @@ export class DatabaseService {
     if (!trimmedName) throw new Error('Customer name is required.');
 
     console.log('[CustomerCreate] Supabase insert started');
+    const insertPayload: Record<string, any> = {
+      name: trimmedName,
+      phone: data.phone?.trim() || null,
+      email: data.email?.trim() || null,
+      customer_type: data.customer_type || 'REGULAR',
+    };
+    if (data.address !== undefined) {
+      insertPayload.address = data.address.trim() || null;
+    }
+
     const { data: dbData, error } = await supabase
       .from('customers')
-      .insert({
-        name: trimmedName,
-        phone: data.phone?.trim() || null,
-        email: data.email?.trim() || null,
-        customer_type: data.customer_type || 'REGULAR',
-      })
+      .insert(insertPayload)
       .select()
       .single();
 
@@ -912,6 +917,7 @@ export class DatabaseService {
     if (updates.name !== undefined) updatePayload.name = updates.name.trim();
     if (updates.phone !== undefined) updatePayload.phone = updates.phone.trim() || null;
     if (updates.email !== undefined) updatePayload.email = updates.email.trim() || null;
+    if (updates.address !== undefined) updatePayload.address = updates.address.trim() || null;
     if (updates.customer_type !== undefined) updatePayload.customer_type = updates.customer_type;
 
     const { data: dbData, error } = await supabase

@@ -154,7 +154,16 @@
     "cartShort": "Cart",
     "checkout": "Checkout",
     "itemsInCart": "items in cart",
-    "viewCart": "View Cart"
+    "viewCart": "View Cart",
+    "newCustomer": "New Customer",
+    "saveAndAddToOrder": "Save & Add to Order",
+    "quickCustomerModalTitle": "New Customer",
+    "quickCustomerModalDesc": "Register a new customer and immediately attach them to the current order",
+    "quickCustomerSuccess": "Customer saved and selected for the current order",
+    "quickCustomerDuplicatePhone": "A customer with this phone number already exists",
+    "quickCustomerInvalidPhone": "Please enter a valid phone number (at least 7 digits)",
+    "quickCustomerInvalidEmail": "Please enter a valid email address",
+    "quickCustomerPermissionDenied": "Your role does not permit creating new customers."
   },
   "orders": {
     "title": "Order Lifecycle Management",
@@ -268,7 +277,9 @@
     "createModalTitle": "Add Customer Profile",
     "editModalTitle": "Edit Customer Profile",
     "modalDesc": "Manage customer contact details and VIP tier classification",
-    "saveCustomer": "Save Customer"
+    "saveCustomer": "Save Customer",
+    "address": "Address",
+    "addressPlaceholder": "District, Street, Building (Optional)"
   },
   "inventory": {
     "title": "Inventory & Stock Control",

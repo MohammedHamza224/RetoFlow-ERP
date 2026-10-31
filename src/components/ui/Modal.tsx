@@ -50,7 +50,7 @@ export function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200 print:static print:bg-transparent print:p-0 print:backdrop-blur-none">
       <div
         className={cn(
-          'relative w-full bg-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-elevated overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] animate-in zoom-in-95 duration-200 print:max-w-none print:max-h-none print:border-none print:shadow-none print:rounded-none print:overflow-visible',
+          'relative w-full bg-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-elevated overflow-hidden flex flex-col max-h-[92vh] max-h-[92dvh] sm:max-h-[90vh] animate-in zoom-in-95 duration-200 print:max-w-none print:max-h-none print:border-none print:shadow-none print:rounded-none print:overflow-visible',
           maxWidthes[maxWidth]
         )}
       >

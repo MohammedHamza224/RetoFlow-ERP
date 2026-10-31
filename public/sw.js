@@ -6,7 +6,7 @@
  * - Honest offline fallback for navigation requests when network is unavailable
  */
 
-const CACHE_VERSION = 'restoflow-static-v1.2.0';
+const CACHE_VERSION = 'restoflow-static-v1.3.0';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE_ASSETS = [

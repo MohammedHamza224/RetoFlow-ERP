@@ -52,9 +52,18 @@ export class AuthService {
       throw new Error('Your user account is inactive. Please contact your restaurant administrator.');
     }
 
+    const roleName: UserRole = profile.roles?.name || 'STAFF';
+    const existingIdx = localDb.users.findIndex(u => u.id === profile.id);
+    const matchedRole = localDb.roles.find(r => r.name === roleName) || localDb.roles[3];
+    if (existingIdx > -1) {
+      localDb.users[existingIdx] = { ...localDb.users[existingIdx], ...profile, role: matchedRole };
+    } else {
+      localDb.users.push({ ...profile, role: matchedRole });
+    }
+
     return {
       ...profile,
-      role_name: profile.roles?.name || 'STAFF',
+      role_name: roleName,
     };
   }
 
@@ -80,9 +89,17 @@ export class AuthService {
       }
 
       if (profile && profile.is_active) {
+        const roleName: UserRole = profile.roles?.name || 'STAFF';
+        const existingIdx = localDb.users.findIndex(u => u.id === profile.id);
+        const matchedRole = localDb.roles.find(r => r.name === roleName) || localDb.roles[3];
+        if (existingIdx > -1) {
+          localDb.users[existingIdx] = { ...localDb.users[existingIdx], ...profile, role: matchedRole };
+        } else {
+          localDb.users.push({ ...profile, role: matchedRole });
+        }
         return {
           ...profile,
-          role_name: profile.roles?.name || 'STAFF',
+          role_name: roleName,
         };
       }
     }

@@ -154,7 +154,16 @@
     "cartShort": "السلة",
     "checkout": "الدفع",
     "itemsInCart": "أصناف في السلة",
-    "viewCart": "عرض السلة"
+    "viewCart": "عرض السلة",
+    "newCustomer": "عميل جديد",
+    "saveAndAddToOrder": "حفظ وإضافة للطلب",
+    "quickCustomerModalTitle": "عميل جديد",
+    "quickCustomerModalDesc": "تسجيل عميل جديد وربطه بالطلب الحالي مباشرة دون مغادرة نقطة البيع",
+    "quickCustomerSuccess": "تم حفظ العميل وربطه بالطلب الحالي بنجاح",
+    "quickCustomerDuplicatePhone": "يوجد عميل مسجل مسبقاً بنفس رقم الهاتف",
+    "quickCustomerInvalidPhone": "يرجى إدخال رقم هاتف صحيح (7 أرقام على الأقل)",
+    "quickCustomerInvalidEmail": "يرجى إدخال بريد إلكتروني صحيح",
+    "quickCustomerPermissionDenied": "عذراً، صلاحيات حسابك لا تسمح بإضافة عملاء جدد."
   },
   "orders": {
     "title": "إدارة دورة حياة الطلب",
@@ -268,7 +277,9 @@
     "createModalTitle": "إضافة ملف عميل جديد",
     "editModalTitle": "تعديل ملف العميل",
     "modalDesc": "إدارة بيانات التواصل الخاصة بالعميل وفئة التصنيف",
-    "saveCustomer": "حفظ بيانات العميل"
+    "saveCustomer": "حفظ بيانات العميل",
+    "address": "العنوان",
+    "addressPlaceholder": "الحي، الشارع، المبنى (اختياري)"
   },
   "inventory": {
     "title": "إدارة ومراقبة المخزون",
